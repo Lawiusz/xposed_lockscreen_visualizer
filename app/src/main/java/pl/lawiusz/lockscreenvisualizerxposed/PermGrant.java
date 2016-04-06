@@ -6,7 +6,7 @@ import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
-public class PermGrant {
+class PermGrant {
     private static final String PERM_RECORD_AUDIO ="android.permission.RECORD_AUDIO";
     private static final String PERM_MOD_AUDIO ="android.permission.MODIFY_AUDIO_SETTINGS";
 

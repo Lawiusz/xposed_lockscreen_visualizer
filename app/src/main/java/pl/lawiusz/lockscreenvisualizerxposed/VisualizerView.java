@@ -1,6 +1,7 @@
 package pl.lawiusz.lockscreenvisualizerxposed;
 /*
 * Copyright (C) 2015 The CyanogenMod Project
+* Copyright (C) 2016 Lawiusz
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -31,24 +32,22 @@ import android.view.View;
 public class VisualizerView extends View implements Palette.PaletteAsyncListener,
         KeyguardStateMonitor.Listener {
 
-    private Paint mPaint;
+    private final Paint mPaint;
     private Visualizer mVisualizer;
     private ObjectAnimator mVisualizerColorAnimator;
 
-    private ValueAnimator[] mValueAnimators;
-    private float[] mFFTPoints;
+    private final ValueAnimator[] mValueAnimators;
+    private final float[] mFFTPoints;
 
-    private boolean mVisualizerEnabled = true;
     private boolean mVisible = false;
     private boolean mPlaying = false;
     private boolean mDisplaying = false; // the state we're animating to
     private int mColor;
     private Bitmap mCurrentBitmap;
-    private int mBrightness = 5;
 
     private KeyguardStateMonitor mKeyguardMonitor;
 
-    private Visualizer.OnDataCaptureListener mVisualizerListener =
+    private final Visualizer.OnDataCaptureListener mVisualizerListener =
             new Visualizer.OnDataCaptureListener() {
                 byte rfk, ifk;
                 int dbValue;
@@ -135,23 +134,8 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         this(context, null, 0);
     }
 
-    private static int brightenColor(int color, int howMuch) {
-        float[] hsv = new float[3];
-        Color.colorToHSV(color, hsv);
-        hsv[2] = hsv[2] + ((float)howMuch / 10);
-        return Color.HSVToColor(hsv);
-    }
-
-    private static int darkenColor(int color, int howMuch) {
-        float[] hsv = new float[3];
-        Color.colorToHSV(color, hsv);
-        hsv[2] = hsv[2] - ((float)howMuch / 10);
-        return Color.HSVToColor(hsv);
-    }
-
     private void updateViewVisibility() {
-        setVisibility(mKeyguardMonitor != null && mKeyguardMonitor.isShowing()
-                && mVisualizerEnabled ? View.VISIBLE : View.GONE);
+        setVisibility(mKeyguardMonitor != null && mKeyguardMonitor.isShowing() ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -197,7 +181,7 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
 
     @Override
     public boolean hasOverlappingRendering() {
-        return mVisualizerEnabled && mDisplaying;
+        return mDisplaying;
     }
 
     @Override
@@ -218,9 +202,9 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         }
     }
 
-    public void setVisible(boolean visible) {
-        if (mVisible != visible) {
-            mVisible = visible;
+    public void setVisible() {
+        if (!mVisible) {
+            mVisible = true;
             checkStateChanged();
         }
     }
@@ -232,13 +216,6 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         }
     }
 
-    public void setBrightness(int brightness){
-        if (brightness < 0 || brightness > 10){
-            throw new IllegalArgumentException("Brightness must be between 0 and 10!");
-        }
-        mBrightness = brightness;
-        changeColor();
-    }
 
     public void setBitmap(Bitmap bitmap) {
         if (mCurrentBitmap == bitmap) {
@@ -252,13 +229,6 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         }
     }
 
-    private void changeColor(){
-        if (mCurrentBitmap != null) {
-            Palette.from(mCurrentBitmap).generate(this);
-        } else {
-            setColor(Color.TRANSPARENT);
-        }
-    }
 
     @Override
     public void onGenerated(Palette palette) {
@@ -271,9 +241,7 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
                 color = palette.getDarkVibrantColor(color);
             }
         }
-
-        int modifiedColor = darkenColor(color, 5);
-        setColor(brightenColor(modifiedColor, mBrightness));
+        setColor(color);
     }
 
     private void setColor(int color) {
@@ -303,7 +271,7 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
     }
 
     private void checkStateChanged() {
-        if (mVisible && mPlaying && mVisualizerEnabled) {
+        if (mVisible && mPlaying) {
             if (!mDisplaying) {
                 mDisplaying = true;
                 AsyncTask.execute(mLinkVisualizer);
@@ -336,22 +304,4 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         checkStateChanged();
     }
 
-    //public String getDebugValues(){
-    //    StringBuilder builder = new StringBuilder();
-    //    builder.append(" |Visualizer isAttachedToWindow() == ");
-    //    if (isAttachedToWindow()){
-    //        builder.append(true);
-    //    } else {
-    //        builder.append(false);
-    //    }
-    //    View rootView = getRootView();
-    //    builder.append(" |Visualizer RootView is ");
-    //    builder.append(rootView.getClass().getName());
-    //    builder.append(" id: ").append((getRootView().getId()));
-    //    builder.append("rootview's context instanceof Activity ==");
-    //    builder.append(rootView.getContext() instanceof Activity);
-//
-    //    builder.append(" |EOF|");
-    //    return builder.toString();
-    //}
 }

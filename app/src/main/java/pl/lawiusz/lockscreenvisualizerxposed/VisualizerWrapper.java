@@ -9,10 +9,10 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-public class VisualizerWrapper {
-    private Context theirContext;
-    private Context modContext;
-    private ViewGroup theirContainer;
+class VisualizerWrapper {
+    private final Context theirContext;
+    private final Context modContext;
+    private final ViewGroup theirContainer;
 
     private VisualizerView visualizerView;
 

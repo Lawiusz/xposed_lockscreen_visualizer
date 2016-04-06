@@ -1,25 +1,23 @@
 package pl.lawiusz.lockscreenvisualizerxposed;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     public static final String PREF_ANTIDIMMER = "antidimmer";
-    public static final String PREF_BRIGHTNESS = "visualizer_brightness";
     public static final String PREFS_PUBLIC = "public";
     private SharedPreferences preferences;
     private Switch antidimmerSwitch;
@@ -30,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         preferences = getSharedPreferences(PREFS_PUBLIC, MODE_PRIVATE);
         File prefsDir = new File(getApplicationInfo().dataDir, "shared_prefs");
         File prefsFile = new File(prefsDir, PREFS_PUBLIC+ ".xml");
@@ -42,37 +39,13 @@ public class MainActivity extends AppCompatActivity {
         final VisualizerView visualizerView = (VisualizerView) findViewById(R.id.visualizer_view);
         antidimmerSwitch = (Switch) findViewById(R.id.antidimmer_switch);
         antidimmerSummary = (TextView) findViewById(R.id.antidimmer_summary);
-        final SeekBar brightnessSeekBar = (SeekBar) findViewById(R.id.brightness_slider);
-        final TextView brightnessValueTv = (TextView) findViewById(R.id.tv_brightness_value);
 
-        final int brightness = preferences.getInt(PREF_BRIGHTNESS, 5);
         // Set-up visualizer preview
         assert visualizerView != null;
-        visualizerView.setVisible(true);
+        visualizerView.setVisible();
         visualizerView.setPlaying(true);
         visualizerView.setBitmap(getColorBitmap());
 
-        assert brightnessValueTv != null;
-        brightnessValueTv.setText(String.valueOf(brightness));
-        assert brightnessSeekBar != null;
-        brightnessSeekBar.setProgress(brightness);
-        brightnessSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (!fromUser) return;
-                brightnessValueTv.setText(String.valueOf(progress));
-                visualizerView.setBrightness(progress);
-                preferences.edit().putInt(PREF_BRIGHTNESS, progress).apply();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
         assert antidimmerSwitch != null;
         boolean enabled = preferences.getBoolean(PREF_ANTIDIMMER, false);
         antidimmerSwitch.setChecked(enabled);
@@ -98,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         canvas.drawColor(color);
         return bmp;
     }
-    private View.OnClickListener onSwitchClick = new View.OnClickListener() {
+    private final View.OnClickListener onSwitchClick = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             boolean enabled = antidimmerSwitch.isChecked();

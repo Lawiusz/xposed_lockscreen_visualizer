@@ -8,7 +8,7 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 public class KeyguardStateMonitor {
-    public static final String CLASS_KG_MONITOR = "com.android.systemui.statusbar.policy.KeyguardMonitor";
+    private static final String CLASS_KG_MONITOR = "com.android.systemui.statusbar.policy.KeyguardMonitor";
     private boolean mIsShowing;
     private boolean mIsSecured;
     private final List<Listener> mListeners = new ArrayList<>();

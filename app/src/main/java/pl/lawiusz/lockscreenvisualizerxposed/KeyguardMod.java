@@ -15,8 +15,8 @@ import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
-public class KeyguardMod {
-    public static final String CLASS_PHONE_STATUSBAR = "com.android.systemui.statusbar.phone.PhoneStatusBar";
+class KeyguardMod {
+    private static final String CLASS_PHONE_STATUSBAR = "com.android.systemui.statusbar.phone.PhoneStatusBar";
     private static VisualizerView mVisualizerView;
     private static Context mContext;
 
@@ -47,7 +47,7 @@ public class KeyguardMod {
                     if (mVisualizerView != null) {
                         mVisualizerView.setKeyguardMonitor(monitor);
                         mVisualizerView.setPlaying(true);
-                        mVisualizerView.setVisible(true);
+                        mVisualizerView.setVisible();
                     } else {
                         XposedBridge.log("VisualizerView is null!");
                     }
@@ -86,14 +86,12 @@ public class KeyguardMod {
                     if (mVisualizerView != null) {
                         if (!mKeyguardFadingAway && keyguardVisible && backdropBitmap != null && mScreenOn) {
                             // if there's album art, ensure visualizer is visible
-                            mVisualizerView.setVisible(true);
+                            mVisualizerView.setVisible();
                             boolean playing = mMediaController != null
                                     && mMediaController.getPlaybackState() != null
                                     && mMediaController.getPlaybackState().getState()
                                     == PlaybackState.STATE_PLAYING;
                             mVisualizerView.setPlaying(playing);
-                            int brightness = xPreferences.getInt(MainActivity.PREF_BRIGHTNESS, 5);
-                            mVisualizerView.setBrightness(brightness);
                             boolean antidimmerEnabled = xPreferences.getBoolean(MainActivity.PREF_ANTIDIMMER, false);
                             if (playing && antidimmerEnabled){
                                 mVisualizerView.setKeepScreenOn(true);
