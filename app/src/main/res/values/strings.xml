@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Lockscreen Visualizer Xposed</string>
+    <string name="xposedDescription">Add CM\'s visualizer to lockscreen</string>
+    <string name="antidimmer">Prevent screen from dimming</string>
+    <string name="vis_brightness">Visualizer brightness</string>
+    <string name="antidimmer_enabled">Lock screen won\'t dim while displaying visualizer</string>
+    <string name="antidimmer_disabled">Lock screen will dim in accordance with system settings</string>
+    <string name="restart_needed">You may need to restart your device in order to see changes.</string>
+</resources>
