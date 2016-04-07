@@ -24,10 +24,8 @@ repositories {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
-    //noinspection GradleDependency
     provided 'de.robv.android.xposed:api:81'
-
+    //noinspection GradleDependency
     compile 'com.android.support:palette-v7:23.2.1'
-    compile 'com.android.support:support-v4:23.2.1'
 }
 

@@ -31,6 +31,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import java.io.File;
 
@@ -91,6 +92,7 @@ public class SettingsActivity extends PreferenceActivity {
             antidimmer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    Toast.makeText(getActivity(), R.string.restart_needed, Toast.LENGTH_SHORT).show();
                     if ((Boolean)newValue){
                         preference.setSummary(R.string.antidimmer_enabled);
                     } else {
