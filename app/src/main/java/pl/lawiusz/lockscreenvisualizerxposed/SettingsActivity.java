@@ -39,6 +39,7 @@ public class SettingsActivity extends PreferenceActivity {
     public static final String PREF_ANTIDIMMER = "antidimmer";
     public static final String PREFS_PUBLIC = "public";
     private static final String PREF_ABOUT = "about";
+    private static final String PREF_XPOSED = "xposed_working";
     private static VisualizerView visualizerView;
 
     @Override
@@ -64,6 +65,9 @@ public class SettingsActivity extends PreferenceActivity {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName);
     }
+    private static boolean isXposedWorking(){
+        return false;
+    }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class GeneralPreferenceFragment extends PreferenceFragment {
@@ -88,7 +92,13 @@ public class SettingsActivity extends PreferenceActivity {
             visualizerView.setBitmap(getColorBitmap(getActivity()));
             final Preference antidimmer = findPreference(PREF_ANTIDIMMER);
             final Preference about = findPreference(PREF_ABOUT);
-
+            final Preference xposedStatus = findPreference(PREF_XPOSED);
+            //noinspection ConstantConditions
+            if (isXposedWorking()){
+                xposedStatus.setSummary(R.string.xposed_ok);
+            } else {
+                xposedStatus.setSummary(R.string.xposed_err);
+            }
             antidimmer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {

@@ -6,6 +6,9 @@
         android:summary="@string/antidimmer_disabled"
         android:title="@string/antidimmer"/>
     <Preference
+        android:key="xposed_working"
+        android:title="@string/xposed_status"/>
+    <Preference
         android:key="about"
         android:summary="@string/about_summary"
         android:title="@string/about"/>

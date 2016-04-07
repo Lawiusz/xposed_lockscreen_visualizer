@@ -30,6 +30,8 @@ import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
 import android.view.View;
 
+import de.robv.android.xposed.XposedBridge;
+
 public class VisualizerView extends View implements Palette.PaletteAsyncListener,
         KeyguardStateMonitor.Listener {
 
@@ -81,7 +83,7 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
             try {
                 mVisualizer = new Visualizer(0);
             } catch (Exception e) {
-                e.printStackTrace();
+                XposedBridge.log(e);
                 return;
             }
 

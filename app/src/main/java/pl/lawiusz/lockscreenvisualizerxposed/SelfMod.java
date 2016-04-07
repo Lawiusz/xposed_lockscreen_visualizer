@@ -17,28 +17,17 @@
  */
 package pl.lawiusz.lockscreenvisualizerxposed;
 
-import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import de.robv.android.xposed.XC_MethodReplacement;
+import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.XposedHelpers;
 
-public class MainXposedMod implements IXposedHookLoadPackage{
-    public static final String MOD_PACKAGE = "pl.lawiusz.lockscreenvisualizerxposed";
-    public static final String SYSTEMUI_PACKAGE = "com.android.systemui";
-
-    @Override
-    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam)
-            throws Throwable {
-
-        if (lpparam.packageName.equals("android") &&
-                lpparam.processName.equals("android")) {
-            PermGrant.initAndroid(lpparam.classLoader);
+public class SelfMod {
+    public static void init(final ClassLoader loader){
+        try {
+            final Class<?> activityClass = XposedHelpers.findClass(MainXposedMod.MOD_PACKAGE + ".SettingsActivity", loader);
+            XposedHelpers.findAndHookMethod(activityClass, "isXposedWorking", XC_MethodReplacement.returnConstant(true));
+        } catch (Throwable e){
+            XposedBridge.log(e);
         }
-
-        if (lpparam.packageName.equals(SYSTEMUI_PACKAGE)) {
-            KeyguardMod.init(lpparam.classLoader);
-        }
-        if (lpparam.packageName.equals(MOD_PACKAGE)){
-            SelfMod.init(lpparam.classLoader);
-        }
-
     }
 }
