@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:tools="http://schemas.android.com/tools"
-          package="pl.lawiusz.lockscreenvisualizerxposed"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest package="pl.lawiusz.lockscreenvisualizerxposed"
+          xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
@@ -23,10 +23,9 @@
             android:name="xposeddescription"
             android:value="@string/xposedDescription"/>
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".SettingsActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>

@@ -1,0 +1,12 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="antidimmer"
+        android:summary="@string/antidimmer_disabled"
+        android:title="@string/antidimmer"/>
+    <Preference
+        android:key="about"
+        android:summary="@string/about_summary"
+        android:title="@string/about"/>
+</PreferenceScreen>

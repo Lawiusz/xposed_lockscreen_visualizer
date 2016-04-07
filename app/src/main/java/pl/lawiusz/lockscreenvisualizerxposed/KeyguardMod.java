@@ -1,3 +1,20 @@
+/*
+    This file is part of lockscreenvisualizerxposed.
+
+    lockscreenvisualizerxposed is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    lockscreenvisualizerxposed is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with lockscreenvisualizerxposed; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package pl.lawiusz.lockscreenvisualizerxposed;
 
 import android.app.WallpaperManager;
@@ -26,7 +43,7 @@ class KeyguardMod {
             final Class<?> phoneStatusBar = XposedHelpers.findClass(CLASS_PHONE_STATUSBAR, loader);
 
             final String packageName = "pl.lawiusz.lockscreenvisualizerxposed";
-            final XSharedPreferences xPreferences = new XSharedPreferences(packageName, MainActivity.PREFS_PUBLIC);
+            final XSharedPreferences xPreferences = new XSharedPreferences(packageName, SettingsActivity.PREFS_PUBLIC);
             xPreferences.makeWorldReadable();
 
             XposedHelpers.findAndHookMethod(phoneStatusBar, "makeStatusBarView", new XC_MethodHook() {
@@ -93,7 +110,7 @@ class KeyguardMod {
                                     && mMediaController.getPlaybackState().getState()
                                     == PlaybackState.STATE_PLAYING;
                             mVisualizerView.setPlaying(playing);
-                            boolean antidimmerEnabled = xPreferences.getBoolean(MainActivity.PREF_ANTIDIMMER, false);
+                            boolean antidimmerEnabled = xPreferences.getBoolean(SettingsActivity.PREF_ANTIDIMMER, false);
                             if (playing && antidimmerEnabled){
                                 mVisualizerView.setKeepScreenOn(true);
                                 if (mBackdrop != null){

@@ -1,4 +1,3 @@
-package pl.lawiusz.lockscreenvisualizerxposed;
 /*
 * Copyright (C) 2015 The CyanogenMod Project
 * Copyright (C) 2016 Lawiusz
@@ -15,6 +14,8 @@ package pl.lawiusz.lockscreenvisualizerxposed;
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+package pl.lawiusz.lockscreenvisualizerxposed;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;

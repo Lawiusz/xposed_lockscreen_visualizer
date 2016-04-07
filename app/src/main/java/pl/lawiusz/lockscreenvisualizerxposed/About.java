@@ -17,25 +17,24 @@
  */
 package pl.lawiusz.lockscreenvisualizerxposed;
 
-import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import android.app.Activity;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.content.Context;
+import android.os.Bundle;
 
-public class MainXposedMod implements IXposedHookLoadPackage{
-    public static final String MOD_PACKAGE = "pl.lawiusz.lockscreenvisualizerxposed";
-    public static final String SYSTEMUI_PACKAGE = "com.android.systemui";
+public class About extends DialogFragment {
+    private static Context mContext;
+    public static void show(Activity context) {
+        About dialog = new About();
+        mContext = context;
+        dialog.show(context.getFragmentManager(), "[ABOUT_DIALOG]");
+    }
 
     @Override
-    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam)
-            throws Throwable {
-
-        if (lpparam.packageName.equals("android") &&
-                lpparam.processName.equals("android")) {
-            PermGrant.initAndroid(lpparam.classLoader);
-        }
-
-        if (lpparam.packageName.equals(SYSTEMUI_PACKAGE)) {
-            KeyguardMod.init(lpparam.classLoader);
-        }
-
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = new Dialog(mContext);
+        dialog.setContentView(R.layout.about_dialog);
+        return dialog;
     }
 }

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent">
+
+<RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingBottom="8dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/author"
+        android:id="@+id/about_author_title"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/author_content"
+        android:id="@+id/about_author_content"
+        android:layout_below="@+id/about_author_title"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="2dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/license"
+        android:id="@+id/about_license_title"
+        android:layout_below="@+id/about_author_content"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="22dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/license_content"
+        android:id="@+id/about_license"
+        android:layout_below="@+id/about_license_title"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="2dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/thanks"
+        android:id="@+id/about_thanks_title"
+        android:layout_below="@+id/about_license"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="22dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/thanks_content"
+        android:id="@+id/about_thanks_content"
+        android:layout_below="@+id/about_thanks_title"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="2dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/support"
+        android:id="@+id/about_support_title"
+        android:layout_below="@+id/about_thanks_content"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="22dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/xda_link"
+        android:id="@+id/about_support_content"
+        android:layout_below="@+id/about_support_title"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="2dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/source"
+        android:id="@+id/about_source_title"
+        android:layout_below="@+id/about_support_content"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="22dp"/>
+
+    <TextView
+        android:autoLink="all"
+        android:linksClickable="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/github_link"
+        android:id="@+id/about_source_content"
+        android:layout_below="@+id/about_source_title"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="2dp"
+        android:clickable="true"/>
+</RelativeLayout>
+</ScrollView>
