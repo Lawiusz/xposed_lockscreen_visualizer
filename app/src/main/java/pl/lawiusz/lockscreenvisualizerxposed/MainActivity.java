@@ -22,6 +22,7 @@ public class MainActivity extends Activity {
     private SharedPreferences preferences;
     private Switch antidimmerSwitch;
     private TextView antidimmerSummary;
+    private VisualizerView visualizerView;
 
     @SuppressLint("SetWorldReadable")
     @Override
@@ -36,7 +37,7 @@ public class MainActivity extends Activity {
                 Log.e("LXVISUALIZER", "Error accessing shared preferences!");
             }
         } else Log.e("LXVISUALIZER", "Invalid shared preferences file!");
-        final VisualizerView visualizerView = (VisualizerView) findViewById(R.id.visualizer_view);
+        visualizerView = (VisualizerView) findViewById(R.id.visualizer_view);
         antidimmerSwitch = (Switch) findViewById(R.id.antidimmer_switch);
         antidimmerSummary = (TextView) findViewById(R.id.antidimmer_summary);
 
@@ -47,12 +48,13 @@ public class MainActivity extends Activity {
         visualizerView.setBitmap(getColorBitmap());
 
         assert antidimmerSwitch != null;
-        boolean enabled = preferences.getBoolean(PREF_ANTIDIMMER, false);
-        antidimmerSwitch.setChecked(enabled);
+        boolean antidimmerEnabled = preferences.getBoolean(PREF_ANTIDIMMER, false);
+        visualizerView.setKeepScreenOn(antidimmerEnabled);
+        antidimmerSwitch.setChecked(antidimmerEnabled);
         antidimmerSwitch.setOnClickListener(onSwitchClick);
         assert antidimmerSummary != null;
         antidimmerSummary.setOnClickListener(onSwitchClick);
-        if (enabled) {
+        if (antidimmerEnabled) {
             antidimmerSummary.setText(getString(R.string.antidimmer_enabled));
         } else {
             antidimmerSummary.setText(getString(R.string.antidimmer_disabled));
@@ -75,6 +77,7 @@ public class MainActivity extends Activity {
         @Override
         public void onClick(View v) {
             boolean enabled = antidimmerSwitch.isChecked();
+            visualizerView.setKeepScreenOn(enabled);
             preferences.edit().putBoolean(PREF_ANTIDIMMER, enabled).apply();
             if (enabled) {
                 antidimmerSummary.setText(getString(R.string.antidimmer_enabled));

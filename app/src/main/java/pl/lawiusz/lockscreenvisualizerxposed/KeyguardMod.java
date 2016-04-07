@@ -19,6 +19,7 @@ class KeyguardMod {
     private static final String CLASS_PHONE_STATUSBAR = "com.android.systemui.statusbar.phone.PhoneStatusBar";
     private static VisualizerView mVisualizerView;
     private static Context mContext;
+    private static ViewGroup mBackdrop;
 
     public static void init(final ClassLoader loader){
         try {
@@ -35,11 +36,11 @@ class KeyguardMod {
                     Context modContext = mContext.createPackageContext(MainXposedMod.MOD_PACKAGE,
                             Context.CONTEXT_IGNORE_SECURITY);
                     VisualizerWrapper wrapper = null;
-                    ViewGroup kgStatusView = (ViewGroup) XposedHelpers.getObjectField(
+                    mBackdrop = (ViewGroup) XposedHelpers.getObjectField(
                             param.thisObject, "mBackdrop");
 
-                        if (kgStatusView != null) {
-                            wrapper = new VisualizerWrapper(mContext, modContext, kgStatusView);
+                        if (mBackdrop != null) {
+                            wrapper = new VisualizerWrapper(mContext, modContext, mBackdrop);
                         }
                     KeyguardStateMonitor monitor = KeyguardStateMonitor.getInstance(loader);
                     assert wrapper != null;
@@ -95,8 +96,14 @@ class KeyguardMod {
                             boolean antidimmerEnabled = xPreferences.getBoolean(MainActivity.PREF_ANTIDIMMER, false);
                             if (playing && antidimmerEnabled){
                                 mVisualizerView.setKeepScreenOn(true);
+                                if (mBackdrop != null){
+                                    mBackdrop.setKeepScreenOn(true);
+                                }
                             } else {
                                 mVisualizerView.setKeepScreenOn(false);
+                                if (mBackdrop != null){
+                                    mBackdrop.setKeepScreenOn(false);
+                                }
                             }
 
                         }
