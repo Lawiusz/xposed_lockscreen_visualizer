@@ -46,6 +46,7 @@ class VisualizerWrapper {
             LayoutInflater inflater = LayoutInflater.from(modContext);
             ViewGroup mRootView = (ViewGroup) inflater.inflate(R.layout.visualizer_scrim, theirContainer, true);
             visualizerView = new VisualizerView(theirContext);
+            visualizerView.setXposedMode(true);
             FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, 1024, Gravity.BOTTOM);
             visualizerView.setLayoutParams(layoutParams);

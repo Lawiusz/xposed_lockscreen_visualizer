@@ -82,11 +82,13 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                                            @NonNull int[] grantResults){
         if (requestCode == 3){
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                if (isPermModAudioGranted(this) && isPermRecordGranted(this)){
-                    if (visualizerView != null) {
-                        visualizerView.setVisible();
-                        visualizerView.setPlaying(true);
-                        visualizerView.setBitmap(getColorBitmap(this));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (isPermModAudioGranted(this) && isPermRecordGranted(this)) {
+                        if (visualizerView != null) {
+                            visualizerView.setVisible();
+                            visualizerView.setPlaying(true);
+                            visualizerView.setBitmap(getColorBitmap(this));
+                        }
                     }
                 }
             } else {
@@ -115,10 +117,10 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
             } else Log.e(TAG, "Invalid shared preferences file!");
 
             Activity currentActivity = getActivity();
-
-            if (!isPermRecordGranted(currentActivity) || !isPermModAudioGranted(currentActivity)){
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.MODIFY_AUDIO_SETTINGS}, 3);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!isPermRecordGranted(currentActivity) || !isPermModAudioGranted(currentActivity)) {
+                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO,
+                            Manifest.permission.MODIFY_AUDIO_SETTINGS}, 3);
                 }
             }
 
@@ -189,10 +191,10 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
     }
     @TargetApi(Build.VERSION_CODES.M)
     private static boolean isPermRecordGranted(Activity activity) {
-       return activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
     }
     @TargetApi(Build.VERSION_CODES.M)
     private static boolean isPermModAudioGranted(Activity activity) {
-        return activity.checkSelfPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS) == PackageManager.PERMISSION_GRANTED;
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || activity.checkSelfPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS) == PackageManager.PERMISSION_GRANTED;
     }
 }

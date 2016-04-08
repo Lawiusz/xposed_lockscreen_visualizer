@@ -19,7 +19,6 @@ package pl.lawiusz.lockscreenvisualizerxposed;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -46,7 +45,7 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
     private boolean mDisplaying = false; // the state we're animating to
     private int mColor;
     private Bitmap mCurrentBitmap;
-
+    private boolean areWeInsideSystemUI = false;
     private KeyguardStateMonitor mKeyguardMonitor;
 
     private final Visualizer.OnDataCaptureListener mVisualizerListener =
@@ -86,8 +85,15 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
                 mVisualizer.setDataCaptureListener(mVisualizerListener, Visualizer.getMaxCaptureRate(),
                         false, true);
                 mVisualizer.setEnabled(true);
-            } catch (Throwable e){
-                e.printStackTrace();
+            } catch (final Throwable e){
+                try {
+                    if (areWeInsideSystemUI){
+                        LLog.e(e);
+                    } else e.printStackTrace();
+                } catch (Throwable e2){
+                    e.printStackTrace();
+                    e2.printStackTrace();
+                }
             }
         }
     };
@@ -304,22 +310,25 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         checkStateChanged();
     }
 
-
-    public String getDebugValues(){
-        StringBuilder builder = new StringBuilder();
-        builder.append(" |Visualizer isAttachedToWindow() == ");
-        if (isAttachedToWindow()){
-            builder.append(true);
-        } else {
-            builder.append(false);
-        }
-        View rootView = getRootView();
-        builder.append(" |Visualizer RootView is ");
-        builder.append(rootView.getClass().getName());
-        builder.append(" id: ").append((getRootView().getId()));
-        builder.append("rootview's context instanceof Activity ==");
-        builder.append(rootView.getContext() instanceof Activity);
-        builder.append(" |EOF|");
-        return builder.toString();
+    public void setXposedMode(boolean isXposed){
+        this.areWeInsideSystemUI = isXposed;
     }
+
+    //public String getDebugValues(){
+    //    StringBuilder builder = new StringBuilder();
+    //    builder.append(" |Visualizer isAttachedToWindow() == ");
+    //    if (isAttachedToWindow()){
+    //        builder.append(true);
+    //    } else {
+    //        builder.append(false);
+    //    }
+    //    View rootView = getRootView();
+    //    builder.append(" |Visualizer RootView is ");
+    //    builder.append(rootView.getClass().getName());
+    //    builder.append(" id: ").append((getRootView().getId()));
+    //    builder.append("rootview's context instanceof Activity ==");
+    //    builder.append(rootView.getContext() instanceof Activity);
+    //    builder.append(" |EOF|");
+    //    return builder.toString();
+    //}
 }

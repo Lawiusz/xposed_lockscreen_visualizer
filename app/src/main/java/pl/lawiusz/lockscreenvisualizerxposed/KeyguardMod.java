@@ -66,7 +66,6 @@ class KeyguardMod {
                         mVisualizerView.setKeyguardMonitor(monitor);
                         mVisualizerView.setPlaying(true);
                         mVisualizerView.setVisible();
-                        XposedBridge.log(mVisualizerView.getDebugValues());
                     } else {
                         XposedBridge.log("VisualizerView is null!");
                     }
