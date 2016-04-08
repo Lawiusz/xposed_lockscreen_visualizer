@@ -21,4 +21,7 @@
     <string name="xposed_ok">Active</string>
     <string name="xposed_err">Inactive</string>
     <string name="no_perms">Audio permissions are need to display visualizer!</string>
+    <string name="visualizer_front">Display visualizer in front of keyguard ui</string>
+    <string name="visualizer_front_desc">Visualizer will be displayed in front of UI elements. This may improve it\'s visibility.</string>
+    <string name="visualizer_behind_desc">Visualizer will be displayed behind UI elements</string>
 </resources>

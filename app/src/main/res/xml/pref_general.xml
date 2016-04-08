@@ -5,6 +5,11 @@
         android:key="antidimmer"
         android:summary="@string/antidimmer_disabled"
         android:title="@string/antidimmer"/>
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="vis_in_front"
+        android:summary="@string/visualizer_front_desc"
+        android:title="@string/visualizer_front"/>
     <Preference
         android:key="xposed_working"
         android:title="@string/xposed_status"/>

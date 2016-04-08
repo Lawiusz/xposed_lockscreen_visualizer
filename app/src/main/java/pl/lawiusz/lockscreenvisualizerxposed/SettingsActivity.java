@@ -45,6 +45,7 @@ import java.io.File;
 public class SettingsActivity extends PreferenceActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
     private static final String TAG = "LXVISUALIZER";
     public static final String PREF_ANTIDIMMER = "antidimmer";
+    public static final String PREF_FRONTMOVER = "vis_in_front";
     public static final String PREFS_PUBLIC = "public";
     private static final String PREF_ABOUT = "about";
     private static final String PREF_XPOSED = "xposed_working";
@@ -129,19 +130,30 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                 visualizerView.setPlaying(true);
                 visualizerView.setBitmap(getColorBitmap(getActivity()));
             }
+
             final Preference antidimmer = findPreference(PREF_ANTIDIMMER);
+            final Preference frontMover = findPreference(PREF_FRONTMOVER);
             final Preference about = findPreference(PREF_ABOUT);
             final Preference xposedStatus = findPreference(PREF_XPOSED);
-            if (isXposedWorking()){
-                xposedStatus.setSummary(R.string.xposed_ok);
-            } else {
-                xposedStatus.setSummary(R.string.xposed_err);
-            }
+
             if (prefsPrivate.getBoolean(PREF_ANTIDIMMER, false)){
                 antidimmer.setSummary(R.string.antidimmer_enabled);
             } else {
                 antidimmer.setSummary(R.string.antidimmer_disabled);
             }
+
+            if (prefsPrivate.getBoolean(PREF_FRONTMOVER, false)){
+                frontMover.setSummary(R.string.visualizer_front_desc);
+            } else {
+                frontMover.setSummary(R.string.visualizer_behind_desc);
+            }
+
+            if (isXposedWorking()){
+                xposedStatus.setSummary(R.string.xposed_ok);
+            } else {
+                xposedStatus.setSummary(R.string.xposed_err);
+            }
+
             antidimmer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -151,6 +163,20 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                         preference.setSummary(R.string.antidimmer_enabled);
                     } else {
                         preference.setSummary(R.string.antidimmer_disabled);
+                    }
+                    return true;
+                }
+            });
+
+            frontMover.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    Toast.makeText(getActivity(), R.string.restart_needed, Toast.LENGTH_SHORT).show();
+                    prefsPublic.edit().putBoolean(PREF_FRONTMOVER,(Boolean)newValue).apply();
+                    if ((Boolean)newValue){
+                        preference.setSummary(R.string.visualizer_front_desc);
+                    } else {
+                        preference.setSummary(R.string.visualizer_behind_desc);
                     }
                     return true;
                 }

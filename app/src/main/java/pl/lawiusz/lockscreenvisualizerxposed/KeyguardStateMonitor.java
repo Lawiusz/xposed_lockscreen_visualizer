@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 public class KeyguardStateMonitor {
@@ -52,7 +51,7 @@ public class KeyguardStateMonitor {
                     });
 
         } catch (Throwable t) {
-            XposedBridge.log(t);
+            LLog.e(t);
         }
     }
 
