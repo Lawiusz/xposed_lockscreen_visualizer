@@ -18,7 +18,6 @@
 package pl.lawiusz.lockscreenvisualizerxposed;
 
 import de.robv.android.xposed.XC_MethodReplacement;
-import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 public class SelfMod {
@@ -27,7 +26,7 @@ public class SelfMod {
             final Class<?> activityClass = XposedHelpers.findClass(MainXposedMod.MOD_PACKAGE + ".SettingsActivity", loader);
             XposedHelpers.findAndHookMethod(activityClass, "isXposedWorking", XC_MethodReplacement.returnConstant(true));
         } catch (Throwable e){
-            XposedBridge.log(e);
+            LLog.e(e);
         }
     }
 }

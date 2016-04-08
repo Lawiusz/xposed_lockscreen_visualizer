@@ -19,6 +19,7 @@ package pl.lawiusz.lockscreenvisualizerxposed;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -29,8 +30,6 @@ import android.os.AsyncTask;
 import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
 import android.view.View;
-
-import de.robv.android.xposed.XposedBridge;
 
 public class VisualizerView extends View implements Palette.PaletteAsyncListener,
         KeyguardStateMonitor.Listener {
@@ -79,19 +78,17 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
 
     private final Runnable mLinkVisualizer = new Runnable() {
         @Override
-        public void run() {
+        public void run()  {
             try {
                 mVisualizer = new Visualizer(0);
-            } catch (Exception e) {
-                XposedBridge.log(e);
-                return;
+                mVisualizer.setEnabled(false);
+                mVisualizer.setCaptureSize(66);
+                mVisualizer.setDataCaptureListener(mVisualizerListener, Visualizer.getMaxCaptureRate(),
+                        false, true);
+                mVisualizer.setEnabled(true);
+            } catch (Throwable e){
+                e.printStackTrace();
             }
-
-            mVisualizer.setEnabled(false);
-            mVisualizer.setCaptureSize(66);
-            mVisualizer.setDataCaptureListener(mVisualizerListener,Visualizer.getMaxCaptureRate(),
-                    false, true);
-            mVisualizer.setEnabled(true);
         }
     };
 
@@ -277,11 +274,11 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         if (mVisible && mPlaying) {
             if (!mDisplaying) {
                 mDisplaying = true;
-                AsyncTask.execute(mLinkVisualizer);
-                animate()
-                        .alpha(1f)
-                        .withEndAction(null)
-                        .setDuration(800);
+                    AsyncTask.execute(mLinkVisualizer);
+                    animate()
+                            .alpha(1f)
+                            .withEndAction(null)
+                            .setDuration(800);
             }
         } else {
             if (mDisplaying) {
@@ -307,4 +304,22 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         checkStateChanged();
     }
 
+
+    public String getDebugValues(){
+        StringBuilder builder = new StringBuilder();
+        builder.append(" |Visualizer isAttachedToWindow() == ");
+        if (isAttachedToWindow()){
+            builder.append(true);
+        } else {
+            builder.append(false);
+        }
+        View rootView = getRootView();
+        builder.append(" |Visualizer RootView is ");
+        builder.append(rootView.getClass().getName());
+        builder.append(" id: ").append((getRootView().getId()));
+        builder.append("rootview's context instanceof Activity ==");
+        builder.append(rootView.getContext() instanceof Activity);
+        builder.append(" |EOF|");
+        return builder.toString();
+    }
 }
