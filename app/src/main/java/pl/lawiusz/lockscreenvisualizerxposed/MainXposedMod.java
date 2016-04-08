@@ -17,6 +17,8 @@
  */
 package pl.lawiusz.lockscreenvisualizerxposed;
 
+import android.os.Build;
+
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -30,7 +32,11 @@ public class MainXposedMod implements IXposedHookLoadPackage{
 
         if (lpparam.packageName.equals("android") &&
                 lpparam.processName.equals("android")) {
-            PermGrant.initAndroid(lpparam.classLoader);
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                PermGrant.initLollipop(lpparam.classLoader);
+            } else {
+                PermGrant.initMarshmallow(lpparam.classLoader);
+            }
         }
 
         if (lpparam.packageName.equals(SYSTEMUI_PACKAGE)) {
