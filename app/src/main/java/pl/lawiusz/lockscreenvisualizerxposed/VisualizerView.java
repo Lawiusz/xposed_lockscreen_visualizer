@@ -24,6 +24,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.media.audiofx.Visualizer;
 import android.os.AsyncTask;
 import android.support.v7.graphics.Palette;
@@ -250,7 +251,7 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         setColor(color);
     }
 
-    private void setColor(int color) {
+    public void setColor(int color) {
         if (color == Color.TRANSPARENT) {
             color = Color.WHITE;
         }
@@ -310,25 +311,31 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         checkStateChanged();
     }
 
-    public void setXposedMode(boolean isXposed){
+    public void setXposedMode(boolean isXposed) {
         this.areWeInsideSystemUI = isXposed;
     }
 
-    //public String getDebugValues(){
-    //    StringBuilder builder = new StringBuilder();
-    //    builder.append(" |Visualizer isAttachedToWindow() == ");
-    //    if (isAttachedToWindow()){
-    //        builder.append(true);
-    //    } else {
-    //        builder.append(false);
-    //    }
-    //    View rootView = getRootView();
-    //    builder.append(" |Visualizer RootView is ");
-    //    builder.append(rootView.getClass().getName());
-    //    builder.append(" id: ").append((getRootView().getId()));
-    //    builder.append("rootview's context instanceof Activity ==");
-    //    builder.append(rootView.getContext() instanceof Activity);
-    //    builder.append(" |EOF|");
-    //    return builder.toString();
-    //}
+    public String getDebugValues(){
+        StringBuilder builder = new StringBuilder();
+        Point displaySize = new Point();
+        getDisplay().getSize(displaySize);
+        builder.append(" |Screen dimens are ").append(displaySize.y).append(" ").append(displaySize.x);
+        builder.append(" |VisualizerView is ");
+        if (getVisibility() == VISIBLE && mVisible){
+            builder.append("VISIBLE");
+        } else builder.append("NOT VISIBLE!!!");
+        builder.append(" |VisualizerView is ").append(getHeight()).append(" high and ").append(getWidth()).append(" wide");
+        builder.append(" |VisualizerView is placed at (").append(getX()).append(",").append(getY()).append(")");
+        View rootView = getRootView();
+        builder.append(" |Visualizer RootView is ");
+        builder.append(rootView.getClass().getName());
+        builder.append(" |RootView is ");
+            if (rootView.getVisibility() == View.VISIBLE){
+                builder.append("VISIBLE");
+            } else builder.append("NOT VISIBLE!!!");
+        builder.append(" |RootView padding is").append(rootView.getPaddingRight()).append(" | ").append(rootView.getPaddingEnd());
+        builder.append(" |RootView is ").append(rootView.getHeight()).append(" high and ").append(rootView.getWidth()).append(" wide");
+        builder.append(" |EOF|");
+        return builder.toString();
+    }
 }

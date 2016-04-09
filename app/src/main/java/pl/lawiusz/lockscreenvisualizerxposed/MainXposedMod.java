@@ -20,9 +20,11 @@ package pl.lawiusz.lockscreenvisualizerxposed;
 import android.os.Build;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-public class MainXposedMod implements IXposedHookLoadPackage{
+public class MainXposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit{
     public static final String MOD_PACKAGE = "pl.lawiusz.lockscreenvisualizerxposed";
     public static final String SYSTEMUI_PACKAGE = "com.android.systemui";
 
@@ -46,5 +48,12 @@ public class MainXposedMod implements IXposedHookLoadPackage{
             SelfMod.init(lpparam.classLoader);
         }
 
+    }
+
+    @Override
+    public void initZygote(StartupParam startupParam) throws Throwable {
+        final String packageName = "pl.lawiusz.lockscreenvisualizerxposed";
+        final XSharedPreferences xPreferences = new XSharedPreferences(packageName);
+        xPreferences.makeWorldReadable();
     }
 }

@@ -6,6 +6,11 @@
         android:summary="@string/antidimmer_disabled"
         android:title="@string/antidimmer"/>
     <SwitchPreference
+        android:defaultValue="true"
+        android:key="autocolor"
+        android:title="@string/use_auto_color"
+        android:summary="@string/auto_color_summary"/>
+    <SwitchPreference
         android:defaultValue="false"
         android:key="vis_in_front"
         android:summary="@string/visualizer_front_desc"

@@ -26,8 +26,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -38,17 +37,23 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
+
+import com.pes.androidmaterialcolorpickerdialog.ColorPicker;
 
 import java.io.File;
 
 public class SettingsActivity extends PreferenceActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
     private static final String TAG = "LXVISUALIZER";
-    public static final String PREF_ANTIDIMMER = "antidimmer";
-    public static final String PREF_FRONTMOVER = "vis_in_front";
-    public static final String PREFS_PUBLIC = "public";
+    private static final String PREF_ANTIDIMMER = "antidimmer";
+    private static final String PREF_FRONTMOVER = "vis_in_front";
+    private static final String PREF_AUTOCOLOR = "autocolor";
+    private static final String PREF_COLOR="custcolor";
     private static final String PREF_ABOUT = "about";
     private static final String PREF_XPOSED = "xposed_working";
+    public static final String PREFS_PUBLIC = "pl.lawiusz.lockscreenvisualizerxposed_preferences";
     private static VisualizerView visualizerView;
 
     @Override
@@ -86,9 +91,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (isPermModAudioGranted(this) && isPermRecordGranted(this)) {
                         if (visualizerView != null) {
-                            visualizerView.setVisible();
-                            visualizerView.setPlaying(true);
-                            visualizerView.setBitmap(getColorBitmap(this));
+                            setUpVisualizer();
                         }
                     }
                 }
@@ -107,16 +110,8 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
-            final SharedPreferences prefsPrivate = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            final SharedPreferences prefsPublic = getActivity().getSharedPreferences(PREFS_PUBLIC, Context.MODE_PRIVATE);
-            File prefsDir = new File(getActivity().getApplicationInfo().dataDir, "shared_prefs");
-            File prefsFile = new File(prefsDir, PREFS_PUBLIC+ ".xml");
-            if (prefsFile.exists()) {
-                if(!prefsFile.setReadable(true, false)){
-                    Log.e(TAG, "Error accessing shared preferences!");
-                }
-            } else Log.e(TAG, "Invalid shared preferences file!");
-
+            final SharedPreferences prefsPublic = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            prefsPublic.edit().putBoolean("placeholder", false).apply();
             Activity currentActivity = getActivity();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!isPermRecordGranted(currentActivity) || !isPermModAudioGranted(currentActivity)) {
@@ -124,25 +119,42 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                             Manifest.permission.MODIFY_AUDIO_SETTINGS}, 3);
                 }
             }
-
-            if (isPermRecordGranted(currentActivity) && isPermModAudioGranted(currentActivity)) {
-                visualizerView.setVisible();
-                visualizerView.setPlaying(true);
-                visualizerView.setBitmap(getColorBitmap(getActivity()));
-            }
-
+            File prefsDir = new File(getActivity().getApplicationInfo().dataDir, "shared_prefs");
+            File prefsFile = new File(prefsDir, PREFS_PUBLIC+ ".xml");
+            if (prefsFile.exists()) {
+                if(!prefsFile.setReadable(true, false)){
+                    Log.e(TAG, "Error accessing shared preferences!");
+                }
+            } else Log.e(TAG, "No shared preferences file!");
             final Preference antidimmer = findPreference(PREF_ANTIDIMMER);
+            final Preference autocolor = findPreference(PREF_AUTOCOLOR);
             final Preference frontMover = findPreference(PREF_FRONTMOVER);
             final Preference about = findPreference(PREF_ABOUT);
             final Preference xposedStatus = findPreference(PREF_XPOSED);
+            final int color = prefsPublic.getInt(PREF_COLOR, 1234567890);
+            if (prefsPublic.getBoolean(PREF_AUTOCOLOR, true)){
+                autocolor.setSummary(R.string.auto_color_summary);
+                if (isPermRecordGranted(currentActivity) && isPermModAudioGranted(currentActivity)) {
+                    setUpVisualizer();
+                }
+            } else {
+                autocolor.setSummary(R.string.color_custom);
+                if (isPermRecordGranted(currentActivity) && isPermModAudioGranted(currentActivity)) {
+                    if (color == 1234567890){
+                        setUpVisualizer();
+                    } else {
+                        setUpVisualizer(color);
+                    }
+                }
+            }
 
-            if (prefsPrivate.getBoolean(PREF_ANTIDIMMER, false)){
+            if (prefsPublic.getBoolean(PREF_ANTIDIMMER, false)){
                 antidimmer.setSummary(R.string.antidimmer_enabled);
             } else {
                 antidimmer.setSummary(R.string.antidimmer_disabled);
             }
 
-            if (prefsPrivate.getBoolean(PREF_FRONTMOVER, false)){
+            if (prefsPublic.getBoolean(PREF_FRONTMOVER, false)){
                 frontMover.setSummary(R.string.visualizer_front_desc);
             } else {
                 frontMover.setSummary(R.string.visualizer_behind_desc);
@@ -158,7 +170,6 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
                     Toast.makeText(getActivity(), R.string.restart_needed, Toast.LENGTH_SHORT).show();
-                    prefsPublic.edit().putBoolean(PREF_ANTIDIMMER,(Boolean)newValue).apply();
                     if ((Boolean)newValue){
                         preference.setSummary(R.string.antidimmer_enabled);
                     } else {
@@ -168,11 +179,46 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                 }
             });
 
+            autocolor.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    Toast.makeText(getActivity(), R.string.restart_needed, Toast.LENGTH_SHORT).show();
+                    if ((Boolean)newValue){
+                        preference.setSummary(R.string.auto_color_summary);
+                        if (visualizerView != null){
+                            setUpVisualizer();
+                        }
+                    } else {
+                        preference.setSummary(R.string.color_custom);
+                        final ColorPicker cp;
+                        if (color != 1234567890){
+                           cp = new ColorPicker(getActivity(), Color.red(color), Color.green(color), Color.blue(color));
+                        } else {
+                            cp = new ColorPicker(getActivity(), 0, 64, 255);
+                        }
+                        cp.show();
+                        Button okColor = (Button)cp.findViewById(R.id.okColorButton);
+                        okColor.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                int color = cp.getColor();
+                                prefsPublic.edit().putInt(PREF_COLOR, color).apply();
+                                if (visualizerView != null){
+                                    setUpVisualizer(color);
+                                }
+                                cp.dismiss();
+                            }
+                        });
+
+                    }
+                    return true;
+                }
+            });
+
             frontMover.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
                     Toast.makeText(getActivity(), R.string.restart_needed, Toast.LENGTH_SHORT).show();
-                    prefsPublic.edit().putBoolean(PREF_FRONTMOVER,(Boolean)newValue).apply();
                     if ((Boolean)newValue){
                         preference.setSummary(R.string.visualizer_front_desc);
                     } else {
@@ -189,6 +235,8 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                     return true;
                 }
             });
+            String version = BuildConfig.VERSION_NAME;
+            about.setSummary(about.getSummary() + " v." + version);
         }
 
         @Override
@@ -202,19 +250,25 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
         }
     }
 
-    private static Bitmap getColorBitmap(Context context) {
+    private static void setUpVisualizer(){
         int color;
+        Context context = visualizerView.getContext();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             color = context.getColor(R.color.colorPrimary);
         } else {
             //noinspection deprecation
             color = context.getResources().getColor(R.color.colorPrimary);
         }
-        Bitmap bmp = Bitmap.createBitmap(2,2, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bmp);
-        canvas.drawColor(color);
-        return bmp;
+        visualizerView.setVisible();
+        visualizerView.setPlaying(true);
+        visualizerView.setColor(color);
     }
+    private static void setUpVisualizer(int color){
+        visualizerView.setVisible();
+        visualizerView.setPlaying(true);
+        visualizerView.setColor(color);
+    }
+
     @TargetApi(Build.VERSION_CODES.M)
     private static boolean isPermRecordGranted(Activity activity) {
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;

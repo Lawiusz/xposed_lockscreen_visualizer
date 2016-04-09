@@ -34,6 +34,12 @@ import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedHelpers;
 
 class KeyguardMod {
+
+    private static final String PREF_ANTIDIMMER = "antidimmer";
+    private static final String PREF_FRONTMOVER = "vis_in_front";
+    private static final String PREF_AUTOCOLOR = "autocolor";
+    private static final String PREF_COLOR="custcolor";
+
     private static final String CLASS_PHONE_STATUSBAR =
             "com.android.systemui.statusbar.phone.PhoneStatusBar";
 
@@ -44,6 +50,8 @@ class KeyguardMod {
     private static Context mContext;
     private static ViewGroup mBackdrop;
 
+    private static int timesLogged = 0;
+
     private static boolean mmScreenOn;
 
     public static void init(final ClassLoader loader){
@@ -51,8 +59,7 @@ class KeyguardMod {
             final Class<?> phoneStatusBar = XposedHelpers.findClass(CLASS_PHONE_STATUSBAR, loader);
 
             final String packageName = "pl.lawiusz.lockscreenvisualizerxposed";
-            final XSharedPreferences xPreferences = new XSharedPreferences(packageName,
-                    SettingsActivity.PREFS_PUBLIC);
+            final XSharedPreferences xPreferences = new XSharedPreferences(packageName);
             xPreferences.makeWorldReadable();
 
             XposedHelpers.findAndHookMethod(phoneStatusBar, "makeStatusBarView",
@@ -66,7 +73,7 @@ class KeyguardMod {
                     VisualizerWrapper wrapper = null;
 
                     String lField;
-                    if (xPreferences.getBoolean(SettingsActivity.PREF_FRONTMOVER, false)){
+                    if (xPreferences.getBoolean(PREF_FRONTMOVER, false)){
                         lField = FIELD_VIS_FRONT;
                     } else {
                         lField = FIELD_VIS_BEHIND;
@@ -85,7 +92,6 @@ class KeyguardMod {
                     mVisualizerView = wrapper.getVisualizerView();
                     if (mVisualizerView != null) {
                         mVisualizerView.setKeyguardMonitor(monitor);
-                        mVisualizerView.setPlaying(true);
                         mVisualizerView.setVisible();
                     } else {
                         LLog.e("VisualizerView is null!");
@@ -123,6 +129,7 @@ class KeyguardMod {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                         Bitmap backdropBitmap = null;
+                        int color;
                         boolean mKeyguardFadingAway = XposedHelpers.getBooleanField(param.thisObject,
                                 "mKeyguardFadingAway");
                         Boolean mScreenOn;
@@ -168,8 +175,12 @@ class KeyguardMod {
                                         && mMediaController.getPlaybackState().getState()
                                         == PlaybackState.STATE_PLAYING;
                                 mVisualizerView.setPlaying(playing);
+                                if (BuildConfig.DEBUG && playing && timesLogged <=5) {
+                                    LLog.d(mVisualizerView.getDebugValues());
+                                    timesLogged++;
+                                }
                                 boolean antidimmerEnabled =
-                                        xPreferences.getBoolean(SettingsActivity.PREF_ANTIDIMMER, false);
+                                        xPreferences.getBoolean(PREF_ANTIDIMMER, false);
                                 if (playing && antidimmerEnabled){
                                     mVisualizerView.setKeepScreenOn(true);
                                     if (mBackdrop != null){
@@ -183,11 +194,24 @@ class KeyguardMod {
                                 }
 
                             }
-                            if (keyguardVisible && backdropBitmap != null) {
-                                // always use current backdrop to color eq
-                                mVisualizerView.setBitmap(backdropBitmap);
-                            } else if (backdropBitmap == null) {
-                                LLog.e("No bitmap to use with visualizer!");
+                            if (keyguardVisible) {
+                                if (!xPreferences.getBoolean(PREF_AUTOCOLOR, true)) {
+                                    color = xPreferences.getInt(PREF_COLOR, 1234567890);
+                                    if (color != 1234567890) {
+                                        mVisualizerView.setColor(color);
+                                    } else if (backdropBitmap != null) {
+                                        mVisualizerView.setBitmap(backdropBitmap);
+                                        LLog.e("No color to use with visualizer. Falling back to backdrop");
+                                    } else {
+                                        LLog.e("No bitmap to use with visualizer. Falling back to default color");
+                                        mVisualizerView.setColor(32767);
+                                    }
+                                } else if (backdropBitmap != null) {
+                                    mVisualizerView.setBitmap(backdropBitmap);
+                                } else {
+                                    LLog.e("No bitmap to use with visualizer. Falling back to default color");
+                                    mVisualizerView.setColor(32767);
+                                }
                             }
                         }
                     }
@@ -202,6 +226,7 @@ class KeyguardMod {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 Bitmap backdropBitmap = null;
+                int color;
                 boolean mKeyguardFadingAway = XposedHelpers.getBooleanField(param.thisObject,
                         "mKeyguardFadingAway");
                 Boolean mScreenOn = (Boolean) XposedHelpers.getObjectField(param.thisObject,
@@ -233,17 +258,19 @@ class KeyguardMod {
                 }
 
                 if (mVisualizerView != null) {
-                    if (!mKeyguardFadingAway && keyguardVisible && backdropBitmap != null
-                            && mScreenOn) {
-                        // if there's album art, ensure visualizer is visible
+                    if (!mKeyguardFadingAway && keyguardVisible && mScreenOn) {
                         mVisualizerView.setVisible();
                         boolean playing = mMediaController != null
                                 && mMediaController.getPlaybackState() != null
                                 && mMediaController.getPlaybackState().getState()
                                 == PlaybackState.STATE_PLAYING;
                         mVisualizerView.setPlaying(playing);
+                        if (BuildConfig.DEBUG && playing && timesLogged <=5) {
+                            LLog.d(mVisualizerView.getDebugValues());
+                            timesLogged++;
+                        }
                         boolean antidimmerEnabled =
-                                xPreferences.getBoolean(SettingsActivity.PREF_ANTIDIMMER, false);
+                                xPreferences.getBoolean(PREF_ANTIDIMMER, false);
                         if (playing && antidimmerEnabled){
                             mVisualizerView.setKeepScreenOn(true);
                             if (mBackdrop != null){
@@ -257,11 +284,24 @@ class KeyguardMod {
                         }
 
                     }
-                    if (keyguardVisible && backdropBitmap != null) {
-                        // always use current backdrop to color eq
-                        mVisualizerView.setBitmap(backdropBitmap);
-                    } else if (backdropBitmap == null) {
-                        LLog.e("No bitmap to use with visualizer");
+                    if (keyguardVisible) {
+                        if (!xPreferences.getBoolean(PREF_AUTOCOLOR, true)) {
+                            color = xPreferences.getInt(PREF_COLOR, 1234567890);
+                            if (color != 1234567890) {
+                                mVisualizerView.setColor(color);
+                            } else if (backdropBitmap != null) {
+                                mVisualizerView.setBitmap(backdropBitmap);
+                                LLog.e("No color to use with visualizer. Falling back to backdrop");
+                            } else {
+                                LLog.e("No bitmap to use with visualizer. Falling back to default color");
+                                mVisualizerView.setColor(32767);
+                            }
+                        } else if (backdropBitmap != null) {
+                            mVisualizerView.setBitmap(backdropBitmap);
+                        } else {
+                            LLog.e("No bitmap to use with visualizer. Falling back to default color");
+                            mVisualizerView.setColor(32767);
+                        }
                     }
                 }
             }

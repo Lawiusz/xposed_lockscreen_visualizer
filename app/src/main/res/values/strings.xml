@@ -24,4 +24,8 @@
     <string name="visualizer_front">Display visualizer in front of keyguard ui</string>
     <string name="visualizer_front_desc">Visualizer will be displayed in front of UI elements. This may improve it\'s visibility.</string>
     <string name="visualizer_behind_desc">Visualizer will be displayed behind UI elements</string>
+    <string name="use_auto_color">Automatic visualizer color</string>
+    <string name="auto_color_summary">Determine color based on current album art</string>
+    <string name="color_custom">Using your custom color</string>
+    <string name="color_palette">Choose visualizer color</string>
 </resources>
