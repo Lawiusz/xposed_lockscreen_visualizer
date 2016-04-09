@@ -61,6 +61,9 @@ class KeyguardMod {
             final String packageName = "pl.lawiusz.lockscreenvisualizerxposed";
             final XSharedPreferences xPreferences = new XSharedPreferences(packageName);
             xPreferences.makeWorldReadable();
+            if (xPreferences.getBoolean("placeholder", true)) {
+                LLog.e("Failed to load XSharedPreferences!");
+            }
 
             XposedHelpers.findAndHookMethod(phoneStatusBar, "makeStatusBarView",
                     new XC_MethodHook() {

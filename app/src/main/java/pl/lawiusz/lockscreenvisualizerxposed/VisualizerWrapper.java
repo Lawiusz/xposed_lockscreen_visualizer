@@ -21,7 +21,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Process;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -42,7 +41,7 @@ class VisualizerWrapper {
     }
     private void init(){
         if (isModAudioPermGranted() && isRecordPermGranted()) {
-            Log.d("LXVISUALIZER", "All needed permissions granted!");
+            if (BuildConfig.DEBUG)LLog.d("All needed permissions granted!");
             LayoutInflater inflater = LayoutInflater.from(modContext);
             ViewGroup mRootView = (ViewGroup) inflater.inflate(R.layout.visualizer_scrim, theirContainer, true);
             visualizerView = new VisualizerView(theirContext);

@@ -46,6 +46,7 @@ import com.pes.androidmaterialcolorpickerdialog.ColorPicker;
 import java.io.File;
 
 public class SettingsActivity extends PreferenceActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
+
     private static final String TAG = "LXVISUALIZER";
     private static final String PREF_ANTIDIMMER = "antidimmer";
     private static final String PREF_FRONTMOVER = "vis_in_front";
@@ -55,12 +56,23 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
     private static final String PREF_XPOSED = "xposed_working";
     public static final String PREFS_PUBLIC = "pl.lawiusz.lockscreenvisualizerxposed_preferences";
     private static VisualizerView visualizerView;
+    private static SharedPreferences prefsPublic;
 
+    @SuppressLint("SetWorldReadable")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        prefsPublic = PreferenceManager.getDefaultSharedPreferences(this);
+        prefsPublic.edit().putBoolean("placeholder", false).apply();
         setContentView(R.layout.activity_main);
         visualizerView = (VisualizerView) findViewById(R.id.visualizerview);
+        File prefsDir = new File(getApplicationInfo().dataDir, "shared_prefs");
+        File prefsFile = new File(prefsDir, PREFS_PUBLIC+ ".xml");
+        if (prefsFile.exists()) {
+            if(!prefsFile.setReadable(true, false)){
+                Log.e(TAG, "Error accessing shared preferences!");
+            }
+        } else Log.e(TAG, "No shared preferences file!");
         getFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
     }
 
@@ -79,6 +91,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName);
     }
+
     private static Boolean isXposedWorking(){
         return Boolean.FALSE;
     }
@@ -104,14 +117,11 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class GeneralPreferenceFragment extends PreferenceFragment {
 
-        @SuppressLint("SetWorldReadable")
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
-            final SharedPreferences prefsPublic = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            prefsPublic.edit().putBoolean("placeholder", false).apply();
             Activity currentActivity = getActivity();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!isPermRecordGranted(currentActivity) || !isPermModAudioGranted(currentActivity)) {
@@ -119,13 +129,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                             Manifest.permission.MODIFY_AUDIO_SETTINGS}, 3);
                 }
             }
-            File prefsDir = new File(getActivity().getApplicationInfo().dataDir, "shared_prefs");
-            File prefsFile = new File(prefsDir, PREFS_PUBLIC+ ".xml");
-            if (prefsFile.exists()) {
-                if(!prefsFile.setReadable(true, false)){
-                    Log.e(TAG, "Error accessing shared preferences!");
-                }
-            } else Log.e(TAG, "No shared preferences file!");
+
             final Preference antidimmer = findPreference(PREF_ANTIDIMMER);
             final Preference autocolor = findPreference(PREF_AUTOCOLOR);
             final Preference frontMover = findPreference(PREF_FRONTMOVER);
@@ -135,15 +139,15 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
             if (prefsPublic.getBoolean(PREF_AUTOCOLOR, true)){
                 autocolor.setSummary(R.string.auto_color_summary);
                 if (isPermRecordGranted(currentActivity) && isPermModAudioGranted(currentActivity)) {
-                    setUpVisualizer();
+                    if (visualizerView != null)setUpVisualizer();
                 }
             } else {
                 autocolor.setSummary(R.string.color_custom);
                 if (isPermRecordGranted(currentActivity) && isPermModAudioGranted(currentActivity)) {
                     if (color == 1234567890){
-                        setUpVisualizer();
+                        if (visualizerView != null) setUpVisualizer();
                     } else {
-                        setUpVisualizer(color);
+                        if (visualizerView != null) setUpVisualizer(color);
                     }
                 }
             }
@@ -185,9 +189,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                     Toast.makeText(getActivity(), R.string.restart_needed, Toast.LENGTH_SHORT).show();
                     if ((Boolean)newValue){
                         preference.setSummary(R.string.auto_color_summary);
-                        if (visualizerView != null){
-                            setUpVisualizer();
-                        }
+                        if (visualizerView != null) setUpVisualizer();
                     } else {
                         preference.setSummary(R.string.color_custom);
                         final ColorPicker cp;
@@ -263,6 +265,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
         visualizerView.setPlaying(true);
         visualizerView.setColor(color);
     }
+
     private static void setUpVisualizer(int color){
         visualizerView.setVisible();
         visualizerView.setPlaying(true);
@@ -271,10 +274,15 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
 
     @TargetApi(Build.VERSION_CODES.M)
     private static boolean isPermRecordGranted(Activity activity) {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                || activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                    == PackageManager.PERMISSION_GRANTED;
     }
+
     @TargetApi(Build.VERSION_CODES.M)
     private static boolean isPermModAudioGranted(Activity activity) {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || activity.checkSelfPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS) == PackageManager.PERMISSION_GRANTED;
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                || activity.checkSelfPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS)
+                    == PackageManager.PERMISSION_GRANTED;
     }
 }
