@@ -27,6 +27,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.media.audiofx.Visualizer;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
 import android.view.View;
@@ -109,6 +110,12 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
             }
         }
     };
+
+    @Override
+    protected void onVisibilityChanged (@NonNull View changedView, int visibility){
+        mVisible = !(visibility == INVISIBLE || visibility == GONE);
+        checkStateChanged();
+    }
 
     public VisualizerView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -209,13 +216,6 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         }
     }
 
-    public void setVisible() {
-        if (!mVisible) {
-            mVisible = true;
-            checkStateChanged();
-        }
-    }
-
     public void setPlaying(boolean playing) {
         if (mPlaying != playing) {
             mPlaying = playing;
@@ -308,6 +308,7 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
 
     @Override
     public void onKeyguardStateChanged() {
+        updateViewVisibility();
         checkStateChanged();
     }
 

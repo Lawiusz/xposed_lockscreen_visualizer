@@ -71,6 +71,9 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
     @Override
     public void onPause(){
         super.onPause();
+        if (visualizerView != null){
+            visualizerView.setPlaying(false);
+        }
         if (!prefsPublicSucc) {
             File prefsDir = new File(getApplicationInfo().dataDir, "shared_prefs");
             File prefsFile = new File(prefsDir, PREFS_PUBLIC + ".xml");
@@ -82,6 +85,27 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                     prefsPublicSucc = true;
                 }
             } else Log.e(TAG, "No shared preferences file!");
+        }
+    }
+    @Override
+    public void onResume(){
+        super.onResume();
+        final int color = prefsPublic.getInt(PREF_COLOR, 1234567890);
+        if (prefsPublic.getBoolean(PREF_AUTOCOLOR, true)){
+            if (isPermRecordGranted(this) && isPermModAudioGranted(this)) {
+                if (visualizerView != null)setUpVisualizer();
+            }
+        } else {
+            if (isPermRecordGranted(this) && isPermModAudioGranted(this)) {
+                if (color == 1234567890){
+                    if (visualizerView != null) setUpVisualizer();
+                } else {
+                    if (visualizerView != null) setUpVisualizer(color);
+                }
+            }
+        }
+        if (visualizerView != null) {
+            visualizerView.setPlaying(true);
         }
     }
 
@@ -160,18 +184,9 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
             final int color = prefsPublic.getInt(PREF_COLOR, 1234567890);
             if (prefsPublic.getBoolean(PREF_AUTOCOLOR, true)){
                 autocolor.setSummary(R.string.auto_color_summary);
-                if (isPermRecordGranted(currentActivity) && isPermModAudioGranted(currentActivity)) {
-                    if (visualizerView != null)setUpVisualizer();
-                }
+
             } else {
                 autocolor.setSummary(R.string.color_custom);
-                if (isPermRecordGranted(currentActivity) && isPermModAudioGranted(currentActivity)) {
-                    if (color == 1234567890){
-                        if (visualizerView != null) setUpVisualizer();
-                    } else {
-                        if (visualizerView != null) setUpVisualizer(color);
-                    }
-                }
             }
 
             if (prefsPublic.getBoolean(PREF_ANTIDIMMER, false)){
@@ -283,14 +298,10 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
             //noinspection deprecation
             color = context.getResources().getColor(R.color.colorPrimary);
         }
-        visualizerView.setVisible();
-        visualizerView.setPlaying(true);
         visualizerView.setColor(color);
     }
 
     private static void setUpVisualizer(int color){
-        visualizerView.setVisible();
-        visualizerView.setPlaying(true);
         visualizerView.setColor(color);
     }
 

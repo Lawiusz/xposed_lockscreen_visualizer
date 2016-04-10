@@ -95,7 +95,6 @@ class KeyguardMod {
                     mVisualizerView = wrapper.getVisualizerView();
                     if (mVisualizerView != null) {
                         mVisualizerView.setKeyguardMonitor(monitor);
-                        mVisualizerView.setVisible();
                     } else {
                         LLog.e("VisualizerView is null!");
                     }
@@ -167,7 +166,6 @@ class KeyguardMod {
 
                         if (mVisualizerView != null) {
                             if (shouldDisplayVisualizer) {
-                                mVisualizerView.setVisible();
                                 boolean playing = mMediaController != null
                                         && mMediaController.getPlaybackState() != null
                                         && mMediaController.getPlaybackState().getState()
