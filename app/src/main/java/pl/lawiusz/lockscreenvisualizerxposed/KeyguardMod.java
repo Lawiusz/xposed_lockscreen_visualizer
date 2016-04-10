@@ -52,7 +52,7 @@ class KeyguardMod {
 
     private static int timesLogged = 0;
 
-    private static boolean mmScreenOn;
+    private static boolean mmScreenOn = false;
 
     public static void init(final ClassLoader loader){
         try {
@@ -102,13 +102,7 @@ class KeyguardMod {
 
                 }
             });
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
-                hookUpdateMediaMetaDataL(phoneStatusBar, xPreferences);
-            } else {
-                hookUpdateMediaMetaDataM(phoneStatusBar, xPreferences);
-            }
-
-
+            hookUpdateMediaMetaData(phoneStatusBar, xPreferences);
         } catch (Throwable e){
             LLog.e(e);
         }
@@ -116,8 +110,8 @@ class KeyguardMod {
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    private static void hookUpdateMediaMetaDataM(final Class phoneStatusBar,
-                                                 final XSharedPreferences xPreferences) throws Throwable {
+    private static void hookUpdateMediaMetaData(final Class phoneStatusBar,
+                                                 final XSharedPreferences xPreferences) {
 
         XposedHelpers.findAndHookMethod(phoneStatusBar, "notifyNavigationBarScreenOn",
                 boolean.class, new XC_MethodHook() {
@@ -125,7 +119,7 @@ class KeyguardMod {
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             mmScreenOn = (boolean) param.args[0];
                     }
-                });
+        });
 
         XposedHelpers.findAndHookMethod(phoneStatusBar, "updateMediaMetaData",
                 boolean.class, new XC_MethodHook() {
@@ -139,6 +133,9 @@ class KeyguardMod {
                         try {
                             mScreenOn = (Boolean) XposedHelpers.getObjectField(param.thisObject,
                                     "mScreenOn");
+                            if (mScreenOn == null){
+                                mScreenOn = mmScreenOn;
+                            }
                         } catch (Throwable e){
                             mScreenOn = mmScreenOn;
                         }
@@ -146,8 +143,6 @@ class KeyguardMod {
                                 XposedHelpers.getObjectField(param.thisObject, "mMediaController");
                         MediaMetadata mMediaMetadata = (MediaMetadata)
                                 XposedHelpers.getObjectField(param.thisObject, "mMediaMetadata");
-                        int mState = XposedHelpers.getIntField(param.thisObject, "mState");
-                        boolean keyguardVisible = (mState != StatusBarState.SHADE);
 
                         if (mMediaMetadata != null) {
                             backdropBitmap = mMediaMetadata.getBitmap(MediaMetadata.METADATA_KEY_ART);
@@ -167,11 +162,11 @@ class KeyguardMod {
                             Drawable wallpaperDrawable = wallpaperManager.getDrawable();
                             backdropBitmap = ((BitmapDrawable)wallpaperDrawable).getBitmap();
                         }
+                        boolean shouldDisplayVisualizer = !mKeyguardFadingAway && backdropBitmap != null
+                                && mScreenOn;
 
                         if (mVisualizerView != null) {
-                            if (!mKeyguardFadingAway && keyguardVisible && backdropBitmap != null
-                                    && mScreenOn) {
-                                // if there's album art, ensure visualizer is visible
+                            if (shouldDisplayVisualizer) {
                                 mVisualizerView.setVisible();
                                 boolean playing = mMediaController != null
                                         && mMediaController.getPlaybackState() != null
@@ -197,117 +192,22 @@ class KeyguardMod {
                                 }
 
                             }
-                            if (keyguardVisible) {
+                            if (shouldDisplayVisualizer) {
                                 if (!xPreferences.getBoolean(PREF_AUTOCOLOR, true)) {
                                     color = xPreferences.getInt(PREF_COLOR, 1234567890);
                                     if (color != 1234567890) {
                                         mVisualizerView.setColor(color);
-                                    } else if (backdropBitmap != null) {
+                                    } else {
                                         mVisualizerView.setBitmap(backdropBitmap);
                                         LLog.e("No color to use with visualizer. Falling back to backdrop");
-                                    } else {
-                                        LLog.e("No bitmap to use with visualizer. Falling back to default color");
-                                        mVisualizerView.setColor(32767);
                                     }
-                                } else if (backdropBitmap != null) {
-                                    mVisualizerView.setBitmap(backdropBitmap);
                                 } else {
-                                    LLog.e("No bitmap to use with visualizer. Falling back to default color");
-                                    mVisualizerView.setColor(32767);
+                                    mVisualizerView.setBitmap(backdropBitmap);
                                 }
                             }
                         }
                     }
-                });
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private static void hookUpdateMediaMetaDataL(final Class phoneStatusBar,
-                                                 final XSharedPreferences xPreferences) throws Throwable{
-        XposedHelpers.findAndHookMethod(phoneStatusBar, "updateMediaMetaData",
-                boolean.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                Bitmap backdropBitmap = null;
-                int color;
-                boolean mKeyguardFadingAway = XposedHelpers.getBooleanField(param.thisObject,
-                        "mKeyguardFadingAway");
-                Boolean mScreenOn = (Boolean) XposedHelpers.getObjectField(param.thisObject,
-                        "mScreenOn");
-                MediaController mMediaController = (MediaController)
-                        XposedHelpers.getObjectField(param.thisObject, "mMediaController");
-                MediaMetadata mMediaMetadata = (MediaMetadata)
-                        XposedHelpers.getObjectField(param.thisObject, "mMediaMetadata");
-                int mState = XposedHelpers.getIntField(param.thisObject, "mState");
-                boolean keyguardVisible = (mState != StatusBarState.SHADE);
-
-                if (mMediaMetadata != null) {
-                    backdropBitmap = mMediaMetadata.getBitmap(MediaMetadata.METADATA_KEY_ART);
-                    if (backdropBitmap == null) {
-                        backdropBitmap =
-                                mMediaMetadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
-                        // might still be null
-                    }
-                }
-                if (backdropBitmap == null){
-                    // use default wallpaper
-                    if (mContext == null){
-                        mContext = (Context) XposedHelpers.getObjectField(param.thisObject,
-                                "mContext");
-                    }
-                    WallpaperManager wallpaperManager = WallpaperManager.getInstance(mContext);
-                    Drawable wallpaperDrawable = wallpaperManager.getDrawable();
-                    backdropBitmap = ((BitmapDrawable)wallpaperDrawable).getBitmap();
-                }
-
-                if (mVisualizerView != null) {
-                    if (!mKeyguardFadingAway && keyguardVisible && mScreenOn) {
-                        mVisualizerView.setVisible();
-                        boolean playing = mMediaController != null
-                                && mMediaController.getPlaybackState() != null
-                                && mMediaController.getPlaybackState().getState()
-                                == PlaybackState.STATE_PLAYING;
-                        mVisualizerView.setPlaying(playing);
-                        if (BuildConfig.DEBUG && playing && timesLogged <=5) {
-                            LLog.d(mVisualizerView.getDebugValues());
-                            timesLogged++;
-                        }
-                        boolean antidimmerEnabled =
-                                xPreferences.getBoolean(PREF_ANTIDIMMER, false);
-                        if (playing && antidimmerEnabled){
-                            mVisualizerView.setKeepScreenOn(true);
-                            if (mBackdrop != null){
-                                mBackdrop.setKeepScreenOn(true);
-                            }
-                        } else {
-                            mVisualizerView.setKeepScreenOn(false);
-                            if (mBackdrop != null){
-                                mBackdrop.setKeepScreenOn(false);
-                            }
-                        }
-
-                    }
-                    if (keyguardVisible) {
-                        if (!xPreferences.getBoolean(PREF_AUTOCOLOR, true)) {
-                            color = xPreferences.getInt(PREF_COLOR, 1234567890);
-                            if (color != 1234567890) {
-                                mVisualizerView.setColor(color);
-                            } else if (backdropBitmap != null) {
-                                mVisualizerView.setBitmap(backdropBitmap);
-                                LLog.e("No color to use with visualizer. Falling back to backdrop");
-                            } else {
-                                LLog.e("No bitmap to use with visualizer. Falling back to default color");
-                                mVisualizerView.setColor(32767);
-                            }
-                        } else if (backdropBitmap != null) {
-                            mVisualizerView.setBitmap(backdropBitmap);
-                        } else {
-                            LLog.e("No bitmap to use with visualizer. Falling back to default color");
-                            mVisualizerView.setColor(32767);
-                        }
-                    }
-                }
-            }
         });
     }
+
 }

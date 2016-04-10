@@ -92,6 +92,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName);
     }
 
+    @SuppressWarnings("SameReturnValue")
     private static Boolean isXposedWorking(){
         return Boolean.FALSE;
     }

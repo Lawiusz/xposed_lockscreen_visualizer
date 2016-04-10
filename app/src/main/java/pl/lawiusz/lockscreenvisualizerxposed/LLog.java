@@ -19,7 +19,7 @@ package pl.lawiusz.lockscreenvisualizerxposed;
 
 import de.robv.android.xposed.XposedBridge;
 
-public class LLog {
+class LLog {
     private LLog(){}
     private static final String TAG = "LXVISUALIZER";
     public static void d(String msg){

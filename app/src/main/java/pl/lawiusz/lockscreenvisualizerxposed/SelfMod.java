@@ -20,7 +20,7 @@ package pl.lawiusz.lockscreenvisualizerxposed;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedHelpers;
 
-public class SelfMod {
+class SelfMod {
     public static void init(final ClassLoader loader){
         try {
             final Class<?> activityClass = XposedHelpers.findClass(MainXposedMod.MOD_PACKAGE + ".SettingsActivity", loader);

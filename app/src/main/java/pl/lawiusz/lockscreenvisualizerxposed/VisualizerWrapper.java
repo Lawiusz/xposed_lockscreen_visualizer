@@ -47,7 +47,7 @@ class VisualizerWrapper {
             visualizerView = new VisualizerView(theirContext);
             visualizerView.setXposedMode(true);
             FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, 1024, Gravity.BOTTOM);
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.BOTTOM);
             visualizerView.setLayoutParams(layoutParams);
             mRootView.addView(visualizerView);
         } else {
