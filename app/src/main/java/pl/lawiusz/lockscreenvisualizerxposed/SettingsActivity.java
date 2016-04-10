@@ -54,28 +54,36 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
     private static final String PREF_COLOR="custcolor";
     private static final String PREF_ABOUT = "about";
     private static final String PREF_XPOSED = "xposed_working";
-    public static final String PREFS_PUBLIC = "pl.lawiusz.lockscreenvisualizerxposed_preferences";
+    private static final String PREFS_PUBLIC = "pl.lawiusz.lockscreenvisualizerxposed_preferences";
     private static VisualizerView visualizerView;
     private static SharedPreferences prefsPublic;
+    private static boolean prefsPublicSucc;
 
-    @SuppressLint("SetWorldReadable")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         prefsPublic = PreferenceManager.getDefaultSharedPreferences(this);
-        prefsPublic.edit().putBoolean("placeholder", false).apply();
         setContentView(R.layout.activity_main);
+        prefsPublic.edit().putBoolean("placeholder", false).apply();
         visualizerView = (VisualizerView) findViewById(R.id.visualizerview);
-        File prefsDir = new File(getApplicationInfo().dataDir, "shared_prefs");
-        File prefsFile = new File(prefsDir, PREFS_PUBLIC+ ".xml");
-        if (prefsFile.exists()) {
-            if(!prefsFile.setReadable(true, false)){
-                Log.e(TAG, "Error accessing shared preferences!");
-            }
-        } else Log.e(TAG, "No shared preferences file!");
         getFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
     }
+    @Override
+    public void onPause(){
+        super.onPause();
+        if (!prefsPublicSucc) {
+            File prefsDir = new File(getApplicationInfo().dataDir, "shared_prefs");
+            File prefsFile = new File(prefsDir, PREFS_PUBLIC + ".xml");
 
+            if (prefsFile.exists()) {
+                if (!prefsFile.setReadable(true, false)) {
+                    Log.e(TAG, "Error accessing shared preferences!");
+                } else {
+                    prefsPublicSucc = true;
+                }
+            } else Log.e(TAG, "No shared preferences file!");
+        }
+    }
 
     @Override
     public boolean onIsMultiPane() {
@@ -118,12 +126,25 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class GeneralPreferenceFragment extends PreferenceFragment {
 
+        @SuppressLint("SetWorldReadable")
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            final Activity currentActivity = getActivity();
+            File prefsDir = new File(currentActivity.getApplicationInfo().dataDir, "shared_prefs");
+            File prefsFile = new File(prefsDir, PREFS_PUBLIC+ ".xml");
+
+            if (prefsFile.exists()) {
+                if(!prefsFile.setReadable(true, false)){
+                    Log.e(TAG, "Error accessing shared preferences!");
+                } else {
+                    prefsPublicSucc = true;
+                }
+            } else Log.e(TAG, "No shared preferences file!");
+
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
-            Activity currentActivity = getActivity();
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!isPermRecordGranted(currentActivity) || !isPermModAudioGranted(currentActivity)) {
                     requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO,
@@ -174,7 +195,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
             antidimmer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    Toast.makeText(getActivity(), R.string.restart_needed, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(currentActivity, R.string.restart_needed, Toast.LENGTH_SHORT).show();
                     if ((Boolean)newValue){
                         preference.setSummary(R.string.antidimmer_enabled);
                     } else {
@@ -187,7 +208,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
             autocolor.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    Toast.makeText(getActivity(), R.string.restart_needed, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(currentActivity, R.string.restart_needed, Toast.LENGTH_SHORT).show();
                     if ((Boolean)newValue){
                         preference.setSummary(R.string.auto_color_summary);
                         if (visualizerView != null) setUpVisualizer();
@@ -195,9 +216,9 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                         preference.setSummary(R.string.color_custom);
                         final ColorPicker cp;
                         if (color != 1234567890){
-                           cp = new ColorPicker(getActivity(), Color.red(color), Color.green(color), Color.blue(color));
+                           cp = new ColorPicker(currentActivity, Color.red(color), Color.green(color), Color.blue(color));
                         } else {
-                            cp = new ColorPicker(getActivity(), 0, 64, 255);
+                            cp = new ColorPicker(currentActivity, 0, 64, 255);
                         }
                         cp.show();
                         Button okColor = (Button)cp.findViewById(R.id.okColorButton);
@@ -221,7 +242,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
             frontMover.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    Toast.makeText(getActivity(), R.string.restart_needed, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(currentActivity, R.string.restart_needed, Toast.LENGTH_SHORT).show();
                     if ((Boolean)newValue){
                         preference.setSummary(R.string.visualizer_front_desc);
                     } else {
@@ -234,7 +255,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
             about.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    About.show(getActivity());
+                    About.show(currentActivity);
                     return true;
                 }
             });
