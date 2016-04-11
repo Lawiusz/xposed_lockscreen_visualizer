@@ -21,6 +21,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -55,6 +56,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
     private static final String PREF_ABOUT = "about";
     private static final String PREF_XPOSED = "xposed_working";
     private static final String PREFS_PUBLIC = "pl.lawiusz.lockscreenvisualizerxposed_preferences";
+    private static final String PREF_HIDEAPP = "hideapp";
     private static VisualizerView visualizerView;
     private static SharedPreferences prefsPublic;
     private static boolean prefsPublicSucc;
@@ -179,6 +181,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
             final Preference antidimmer = findPreference(PREF_ANTIDIMMER);
             final Preference autocolor = findPreference(PREF_AUTOCOLOR);
             final Preference frontMover = findPreference(PREF_FRONTMOVER);
+            final Preference hideApp = findPreference(PREF_HIDEAPP);
             final Preference about = findPreference(PREF_ABOUT);
             final Preference xposedStatus = findPreference(PREF_XPOSED);
             final int color = prefsPublic.getInt(PREF_COLOR, 1234567890);
@@ -224,35 +227,35 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
                     Toast.makeText(currentActivity, R.string.restart_needed, Toast.LENGTH_SHORT).show();
-                    if ((Boolean)newValue){
+                    if ((Boolean) newValue) {
                         preference.setSummary(R.string.auto_color_summary);
                         if (visualizerView != null) setUpVisualizer();
                     } else {
                         preference.setSummary(R.string.color_custom);
                         final ColorPicker cp;
-                        if (color != 1234567890){
-                           cp = new ColorPicker(currentActivity, Color.red(color), Color.green(color), Color.blue(color));
+                        if (color != 1234567890) {
+                            cp = new ColorPicker(currentActivity, Color.red(color), Color.green(color), Color.blue(color));
                         } else {
                             cp = new ColorPicker(currentActivity, 0, 64, 255);
                         }
                         cp.show();
-                        Button okColor = (Button)cp.findViewById(R.id.okColorButton);
+                        Button okColor = (Button) cp.findViewById(R.id.okColorButton);
                         okColor.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 int color = cp.getColor();
                                 prefsPublic.edit().putInt(PREF_COLOR, color).apply();
-                                if (visualizerView != null){
+                                if (visualizerView != null) {
                                     setUpVisualizer(color);
                                 }
                                 cp.dismiss();
                             }
                         });
-
                     }
                     return true;
                 }
             });
+
 
             frontMover.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
@@ -263,6 +266,31 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
                     } else {
                         preference.setSummary(R.string.visualizer_behind_desc);
                     }
+                    return true;
+                }
+            });
+            boolean apphidden = prefsPublic.getBoolean(PREF_HIDEAPP, false);
+            String apphideSummary = apphidden ? getString(R.string.app_invisible)
+                    : getString(R.string.app_visible);
+            hideApp.setSummary(apphideSummary);
+            int mode = apphidden ? PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                    : PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+            getActivity().getPackageManager().setComponentEnabledSetting(
+                    new ComponentName(getActivity(), getClass().getPackage().getName()+".SettingsAlias"), mode,
+                    PackageManager.DONT_KILL_APP);
+
+            hideApp.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    Toast.makeText(currentActivity, R.string.restart_needed, Toast.LENGTH_SHORT).show();
+                    int mode = (Boolean)newValue ? PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                            : PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+                    getActivity().getPackageManager().setComponentEnabledSetting(
+                            new ComponentName(getActivity(), getClass().getPackage().getName()+".SettingsAlias"), mode,
+                            PackageManager.DONT_KILL_APP);
+                    String apphideSummary = (Boolean)newValue
+                            ? getString(R.string.app_invisible) : getString(R.string.app_visible);
+                    hideApp.setSummary(apphideSummary);
                     return true;
                 }
             });

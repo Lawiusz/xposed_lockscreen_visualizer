@@ -15,6 +15,11 @@
         android:key="vis_in_front"
         android:summary="@string/visualizer_front_desc"
         android:title="@string/visualizer_front"/>
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="hideapp"
+        android:title="@string/hide_app"
+        android:summary="@string/app_visible"/>
     <Preference
         android:key="xposed_working"
         android:title="@string/xposed_status"/>

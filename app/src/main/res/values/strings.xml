@@ -27,4 +27,7 @@
     <string name="use_auto_color">Automatic visualizer color</string>
     <string name="auto_color_summary">Determine color based on current album art</string>
     <string name="color_custom">Using your custom color</string>
+    <string name="hide_app">Hide app from app drawer</string>
+    <string name="app_visible">The module is visible in the launcher</string>
+    <string name="app_invisible">The module is not visible in the launcher</string>
 </resources>
