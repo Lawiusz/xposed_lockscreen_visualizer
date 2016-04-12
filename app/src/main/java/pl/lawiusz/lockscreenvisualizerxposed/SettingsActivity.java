@@ -48,7 +48,7 @@ import java.io.File;
 
 public class SettingsActivity extends PreferenceActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    private static final String TAG = "LXVISUALIZER";
+    private static final String TAG = "LXVISUALIZER_UI";
     private static final String PREF_ANTIDIMMER = "antidimmer";
     private static final String PREF_FRONTMOVER = "vis_in_front";
     private static final String PREF_AUTOCOLOR = "autocolor";
@@ -59,7 +59,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
     private static final String PREF_HIDEAPP = "hideapp";
     private static VisualizerView visualizerView;
     private static SharedPreferences prefsPublic;
-    private static boolean prefsPublicSucc;
+    private static int color;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,18 +76,7 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
         if (visualizerView != null){
             visualizerView.setPlaying(false);
         }
-        if (!prefsPublicSucc) {
-            File prefsDir = new File(getApplicationInfo().dataDir, "shared_prefs");
-            File prefsFile = new File(prefsDir, PREFS_PUBLIC + ".xml");
-
-            if (prefsFile.exists()) {
-                if (!prefsFile.setReadable(true, false)) {
-                    Log.e(TAG, "Error accessing shared preferences!");
-                } else {
-                    prefsPublicSucc = true;
-                }
-            } else Log.e(TAG, "No shared preferences file!");
-        }
+       makePrefsReadable(this);
     }
     @Override
     public void onResume(){
@@ -152,25 +141,13 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class GeneralPreferenceFragment extends PreferenceFragment {
 
-        @SuppressLint("SetWorldReadable")
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             final Activity currentActivity = getActivity();
-            File prefsDir = new File(currentActivity.getApplicationInfo().dataDir, "shared_prefs");
-            File prefsFile = new File(prefsDir, PREFS_PUBLIC+ ".xml");
-
-            if (prefsFile.exists()) {
-                if(!prefsFile.setReadable(true, false)){
-                    Log.e(TAG, "Error accessing shared preferences!");
-                } else {
-                    prefsPublicSucc = true;
-                }
-            } else Log.e(TAG, "No shared preferences file!");
-
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
-
+            makePrefsReadable(currentActivity);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!isPermRecordGranted(currentActivity) || !isPermModAudioGranted(currentActivity)) {
                     requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO,
@@ -184,24 +161,29 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
             final Preference hideApp = findPreference(PREF_HIDEAPP);
             final Preference about = findPreference(PREF_ABOUT);
             final Preference xposedStatus = findPreference(PREF_XPOSED);
-            final int color = prefsPublic.getInt(PREF_COLOR, 1234567890);
-            if (prefsPublic.getBoolean(PREF_AUTOCOLOR, true)){
-                autocolor.setSummary(R.string.auto_color_summary);
+            color = 1234567890;
+            if (prefsPublic != null) {
+                color = prefsPublic.getInt(PREF_COLOR, 1234567890);
+                if (prefsPublic.getBoolean(PREF_AUTOCOLOR, true)) {
+                    autocolor.setSummary(R.string.auto_color_summary);
 
-            } else {
-                autocolor.setSummary(R.string.color_custom);
-            }
+                } else {
+                    autocolor.setSummary(R.string.color_custom);
+                }
 
-            if (prefsPublic.getBoolean(PREF_ANTIDIMMER, false)){
-                antidimmer.setSummary(R.string.antidimmer_enabled);
-            } else {
-                antidimmer.setSummary(R.string.antidimmer_disabled);
-            }
+                if (prefsPublic.getBoolean(PREF_ANTIDIMMER, false)) {
+                    antidimmer.setSummary(R.string.antidimmer_enabled);
+                } else {
+                    antidimmer.setSummary(R.string.antidimmer_disabled);
+                }
 
-            if (prefsPublic.getBoolean(PREF_FRONTMOVER, false)){
-                frontMover.setSummary(R.string.visualizer_front_desc);
-            } else {
-                frontMover.setSummary(R.string.visualizer_behind_desc);
+                if (prefsPublic.getBoolean(PREF_FRONTMOVER, false)) {
+                    frontMover.setSummary(R.string.visualizer_front_desc);
+                } else {
+                    frontMover.setSummary(R.string.visualizer_behind_desc);
+                }
+            } else{
+                Log.e(TAG, "Failed to load shared preferences for module ui!");
             }
 
             if (isXposedWorking()){
@@ -345,5 +327,18 @@ public class SettingsActivity extends PreferenceActivity implements ActivityComp
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.M
                 || activity.checkSelfPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS)
                     == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @SuppressLint("SetWorldReadable")
+    private static void makePrefsReadable(Context context){
+        File prefsDir = new File(context.getApplicationInfo().dataDir, "shared_prefs");
+        File prefsFile = new File(prefsDir, PREFS_PUBLIC + ".xml");
+        if (prefsFile.exists()) {
+            if (!prefsFile.setReadable(true, false)) {
+                Log.e(TAG, "Error accessing shared preferences!");
+            } else if (BuildConfig.DEBUG) {
+                Log.d(TAG,"Successfully chmoded prefs!");
+            }
+        } else Log.e(TAG, "No shared preferences file!");
     }
 }
