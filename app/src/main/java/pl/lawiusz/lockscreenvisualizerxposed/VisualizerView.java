@@ -87,6 +87,9 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
                 mVisualizer.setDataCaptureListener(mVisualizerListener, Visualizer.getMaxCaptureRate(),
                         false, true);
                 mVisualizer.setEnabled(true);
+                if (BuildConfig.DEBUG && areWeInsideSystemUI){
+                    LLog.d("Enabling visualizer!");
+                }
             } catch (final Throwable e){
                 try {
                     if (areWeInsideSystemUI){
@@ -104,6 +107,9 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         @Override
         public void run() {
             if (mVisualizer != null) {
+                if (BuildConfig.DEBUG && areWeInsideSystemUI){
+                    LLog.d("Disabling visualizer!");
+                }
                 mVisualizer.setEnabled(false);
                 mVisualizer.release();
                 mVisualizer = null;

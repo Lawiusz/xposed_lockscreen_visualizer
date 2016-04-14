@@ -17,7 +17,6 @@
  */
 package pl.lawiusz.lockscreenvisualizerxposed;
 
-import android.annotation.TargetApi;
 import android.app.WallpaperManager;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -26,7 +25,6 @@ import android.graphics.drawable.Drawable;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.PlaybackState;
-import android.os.Build;
 import android.view.ViewGroup;
 
 import de.robv.android.xposed.XC_MethodHook;
@@ -108,7 +106,6 @@ class KeyguardMod {
 
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
     private static void hookUpdateMediaMetaData(final Class phoneStatusBar,
                                                  final XSharedPreferences xPreferences) {
 
@@ -117,6 +114,11 @@ class KeyguardMod {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             mmScreenOn = (boolean) param.args[0];
+                            if (!mmScreenOn && mVisualizerView != null){
+                                mVisualizerView.setPlaying(false);
+                            } else {
+                                XposedHelpers.callMethod(param.thisObject, "updateMediaMetaData", true);
+                            }
                     }
         });
 
@@ -128,16 +130,7 @@ class KeyguardMod {
                         int color;
                         boolean mKeyguardFadingAway = XposedHelpers.getBooleanField(param.thisObject,
                                 "mKeyguardFadingAway");
-                        Boolean mScreenOn;
-                        try {
-                            mScreenOn = (Boolean) XposedHelpers.getObjectField(param.thisObject,
-                                    "mScreenOn");
-                            if (mScreenOn == null){
-                                mScreenOn = mmScreenOn;
-                            }
-                        } catch (Throwable e){
-                            mScreenOn = mmScreenOn;
-                        }
+
                         MediaController mMediaController = (MediaController)
                                 XposedHelpers.getObjectField(param.thisObject, "mMediaController");
                         MediaMetadata mMediaMetadata = (MediaMetadata)
@@ -162,7 +155,7 @@ class KeyguardMod {
                             backdropBitmap = ((BitmapDrawable)wallpaperDrawable).getBitmap();
                         }
                         boolean shouldDisplayVisualizer = !mKeyguardFadingAway && backdropBitmap != null
-                                && mScreenOn;
+                                && mmScreenOn;
 
                         if (mVisualizerView != null) {
                             if (shouldDisplayVisualizer) {
@@ -170,6 +163,19 @@ class KeyguardMod {
                                         && mMediaController.getPlaybackState() != null
                                         && mMediaController.getPlaybackState().getState()
                                         == PlaybackState.STATE_PLAYING;
+                                if (playing){
+                                    if (!xPreferences.getBoolean(PREF_AUTOCOLOR, true)) {
+                                        color = xPreferences.getInt(PREF_COLOR, 1234567890);
+                                        if (color != 1234567890) {
+                                            mVisualizerView.setColor(color);
+                                        } else {
+                                            mVisualizerView.setBitmap(backdropBitmap);
+                                            LLog.e("No color to use with visualizer. Falling back to backdrop");
+                                        }
+                                    } else {
+                                        mVisualizerView.setBitmap(backdropBitmap);
+                                    }
+                                }
                                 mVisualizerView.setPlaying(playing);
                                 if (BuildConfig.DEBUG && playing && timesLogged <=5) {
                                     LLog.d(mVisualizerView.getDebugValues());
@@ -189,19 +195,8 @@ class KeyguardMod {
                                     }
                                 }
 
-                            }
-                            if (shouldDisplayVisualizer) {
-                                if (!xPreferences.getBoolean(PREF_AUTOCOLOR, true)) {
-                                    color = xPreferences.getInt(PREF_COLOR, 1234567890);
-                                    if (color != 1234567890) {
-                                        mVisualizerView.setColor(color);
-                                    } else {
-                                        mVisualizerView.setBitmap(backdropBitmap);
-                                        LLog.e("No color to use with visualizer. Falling back to backdrop");
-                                    }
-                                } else {
-                                    mVisualizerView.setBitmap(backdropBitmap);
-                                }
+                            } else {
+                                mVisualizerView.setPlaying(false);
                             }
                         }
                     }
