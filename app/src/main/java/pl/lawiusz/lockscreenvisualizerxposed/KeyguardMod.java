@@ -48,7 +48,7 @@ class KeyguardMod {
     private static Context mContext;
     private static ViewGroup mBackdrop;
 
-    private static int timesLogged = 0;
+    //private static int timesLogged = 0;
 
     private static boolean mmScreenOn = false;
 
@@ -71,7 +71,6 @@ class KeyguardMod {
                             "mContext");
                     Context modContext = mContext.createPackageContext(MainXposedMod.MOD_PACKAGE,
                             Context.CONTEXT_IGNORE_SECURITY);
-                    VisualizerWrapper wrapper = null;
 
                     String lField;
                     if (xPreferences.getBoolean(PREF_FRONTMOVER, false)){
@@ -86,11 +85,10 @@ class KeyguardMod {
                             param.thisObject, lField);
 
                         if (mBackdrop != null) {
-                            wrapper = new VisualizerWrapper(mContext, modContext, mBackdrop);
+                            VisualizerWrapper.init(mContext, modContext, mBackdrop);
                         }
                     KeyguardStateMonitor monitor = KeyguardStateMonitor.getInstance(loader);
-                    assert wrapper != null;
-                    mVisualizerView = wrapper.getVisualizerView();
+                    mVisualizerView = VisualizerWrapper.getVisualizerView();
                     if (mVisualizerView != null) {
                         mVisualizerView.setKeyguardMonitor(monitor);
                     } else {
@@ -177,10 +175,10 @@ class KeyguardMod {
                                     }
                                 }
                                 mVisualizerView.setPlaying(playing);
-                                if (BuildConfig.DEBUG && playing && timesLogged <=5) {
-                                    LLog.d(mVisualizerView.getDebugValues());
-                                    timesLogged++;
-                                }
+                                //if (playing && timesLogged <=5) {
+                                //    LLog.d(mVisualizerView.getDebugValues());
+                                //    timesLogged++;
+                                //}
                                 boolean antidimmerEnabled =
                                         xPreferences.getBoolean(PREF_ANTIDIMMER, false);
                                 if (playing && antidimmerEnabled){

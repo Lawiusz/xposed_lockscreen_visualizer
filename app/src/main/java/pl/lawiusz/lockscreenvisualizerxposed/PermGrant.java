@@ -57,7 +57,7 @@ class PermGrant {
                                     //noinspection UnusedAssignment
                                     gpGids = (int[]) XposedHelpers.callStaticMethod(param.thisObject.getClass(),
                                             "appendInts", gpGids, bpGids);
-                                    if (BuildConfig.DEBUG)LLog.d("lGranting " + PERM_MOD_AUDIO + " to " + mPackage);
+                                    LLog.d("lGranting " + PERM_MOD_AUDIO + " to " + mPackage);
                                 }
 
                                 // Add android.permission.RECORD_AUDIOS to be able to capture audio stream.
@@ -70,7 +70,7 @@ class PermGrant {
                                     //noinspection UnusedAssignment
                                     gpGids = (int[]) XposedHelpers.callStaticMethod(param.thisObject.getClass(),
                                             "appendInts", gpGids, bpGids);
-                                    if (BuildConfig.DEBUG)LLog.d("lGranting " + PERM_RECORD_AUDIO + " to " + mPackage);
+                                    LLog.d("lGranting " + PERM_RECORD_AUDIO + " to " + mPackage);
                                 }
 
                             }
@@ -104,7 +104,7 @@ class PermGrant {
                                     final Object pModifyAudio = XposedHelpers.callMethod(permissions, "get",
                                             PERM_MOD_AUDIO);
                                     XposedHelpers.callMethod(ps, "grantInstallPermission", pModifyAudio);
-                                    if (BuildConfig.DEBUG)LLog.d("lGranting " + PERM_MOD_AUDIO + " to " + mPackage);
+                                    LLog.d("lGranting " + PERM_MOD_AUDIO + " to " + mPackage);
                                 }
 
                                 // Add android.permission.RECORD_AUDIOS to be able to capture audio stream.
@@ -112,7 +112,7 @@ class PermGrant {
                                     final Object pAccessSurfaceFlinger = XposedHelpers.callMethod(permissions, "get",
                                             PERM_RECORD_AUDIO);
                                     XposedHelpers.callMethod(ps, "grantInstallPermission", pAccessSurfaceFlinger);
-                                    if (BuildConfig.DEBUG)LLog.d("lGranting " + PERM_RECORD_AUDIO + " to " + mPackage);
+                                    LLog.d("lGranting " + PERM_RECORD_AUDIO + " to " + mPackage);
                                 }
 
                             }

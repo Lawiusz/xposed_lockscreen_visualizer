@@ -27,21 +27,17 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 class VisualizerWrapper {
-    private final Context theirContext;
-    private final Context modContext;
-    private final ViewGroup theirContainer;
 
-    private VisualizerView visualizerView;
+    private static VisualizerView visualizerView;
+    private static boolean ready = false;
 
-    public VisualizerWrapper(Context theirContext, Context modContext, ViewGroup container){
-        this.theirContext = theirContext;
-        this.modContext = modContext;
-        this.theirContainer = container;
-        init();
-    }
-    private void init(){
-        if (isModAudioPermGranted() && isRecordPermGranted()) {
-            if (BuildConfig.DEBUG)LLog.d("All needed permissions granted!");
+    public static void init(Context theirContext, Context modContext, ViewGroup theirContainer){
+        if (ready){
+            LLog.d("VisualizerWrapper ready, no need to reinit!");
+            return;
+        }
+        if (isModAudioPermGranted(theirContext) && isRecordPermGranted(theirContext)) {
+            LLog.d("All needed permissions granted!");
             LayoutInflater inflater = LayoutInflater.from(modContext);
             ViewGroup mRootView = (ViewGroup) inflater.inflate(R.layout.visualizer_scrim, theirContainer, true);
             visualizerView = new VisualizerView(theirContext);
@@ -50,26 +46,30 @@ class VisualizerWrapper {
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.BOTTOM);
             visualizerView.setLayoutParams(layoutParams);
             mRootView.addView(visualizerView);
+            ready = true;
         } else {
             StringBuilder error = new StringBuilder();
             error.append("The following required permissions are not granted: ");
-            if (!isModAudioPermGranted()){
+            if (!isModAudioPermGranted(theirContext)){
                 error.append("MODIFY_AUDIO_SETTINGS ");
             }
-            if (!isRecordPermGranted()){
+            if (!isRecordPermGranted(theirContext)){
                 error.append("RECORD_AUDIO");
             }
             error.append("!");
+            ready = false;
             throw new SecurityException(error.toString());
         }
     }
-    public VisualizerView getVisualizerView(){
-        return visualizerView;
+    public static VisualizerView getVisualizerView(){
+        if (ready) {
+            return visualizerView;
+        } else return null;
     }
-    private boolean isModAudioPermGranted(){
+    private static boolean isModAudioPermGranted(Context theirContext){
         return theirContext.checkPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS, Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED;
     }
-    private boolean isRecordPermGranted(){
+    private static boolean isRecordPermGranted(Context theirContext){
         return theirContext.checkPermission(Manifest.permission.RECORD_AUDIO, Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED;
     }
 }

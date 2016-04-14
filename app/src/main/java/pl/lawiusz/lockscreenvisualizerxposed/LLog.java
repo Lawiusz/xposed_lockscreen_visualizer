@@ -23,7 +23,9 @@ class LLog {
     private LLog(){}
     private static final String TAG = "LXVISUALIZER";
     public static void d(String msg){
-        XposedBridge.log("D/" + TAG + ": " + msg);
+        if (BuildConfig.DEBUG) {
+            XposedBridge.log("D/" + TAG + ": " + msg);
+        }
     }
     public static void e(String msg) {
         XposedBridge.log("E/" + TAG + ": " + msg);

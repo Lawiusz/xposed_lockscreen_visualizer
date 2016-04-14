@@ -24,7 +24,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.media.audiofx.Visualizer;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
@@ -57,8 +56,7 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
                 float magnitude;
 
                 @Override
-                public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
-                }
+                public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {}
 
                 @Override
                 public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
@@ -81,24 +79,21 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         @Override
         public void run()  {
             try {
+                llogD("Enabling visualizer!");
                 mVisualizer = new Visualizer(0);
+                llogD("Created new visualizer");
                 mVisualizer.setEnabled(false);
                 mVisualizer.setCaptureSize(66);
+                llogD("Capture size set to 66");
                 mVisualizer.setDataCaptureListener(mVisualizerListener, Visualizer.getMaxCaptureRate(),
                         false, true);
+                llogD("DataCaptureListener set!");
                 mVisualizer.setEnabled(true);
-                if (BuildConfig.DEBUG && areWeInsideSystemUI){
-                    LLog.d("Enabling visualizer!");
-                }
-            } catch (final Throwable e){
-                try {
+                llogD("Visualizer enabled!!!");
+            } catch (Throwable e){
                     if (areWeInsideSystemUI){
                         LLog.e(e);
                     } else e.printStackTrace();
-                } catch (Throwable e2){
-                    e.printStackTrace();
-                    e2.printStackTrace();
-                }
             }
         }
     };
@@ -107,12 +102,13 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         @Override
         public void run() {
             if (mVisualizer != null) {
-                if (BuildConfig.DEBUG && areWeInsideSystemUI){
-                    LLog.d("Disabling visualizer!");
-                }
+                llogD("Disabling visualizer!");
                 mVisualizer.setEnabled(false);
+                llogD("Visualizer disabled");
                 mVisualizer.release();
+                llogD("Visualizer released");
                 mVisualizer = null;
+                llogD("Properly destroyed visualizer!");
             }
         }
     };
@@ -152,6 +148,12 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
 
     public VisualizerView(Context context) {
         this(context, null, 0);
+    }
+
+    private void llogD(String what){
+        if (areWeInsideSystemUI){
+            LLog.d(what);
+        }
     }
 
     private void updateViewVisibility() {
@@ -207,8 +209,7 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
-        if (mVisualizer != null) {
+        if (mVisualizer != null && mVisualizer.getEnabled()) {
             canvas.drawLines(mFFTPoints, mPaint);
         }
     }
@@ -323,27 +324,27 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         this.areWeInsideSystemUI = isXposed;
     }
 
-    public String getDebugValues(){
-        StringBuilder builder = new StringBuilder();
-        Point displaySize = new Point();
-        getDisplay().getSize(displaySize);
-        builder.append(" |Screen dimens are ").append(displaySize.y).append(" ").append(displaySize.x);
-        builder.append(" |VisualizerView is ");
-        if (getVisibility() == VISIBLE && mVisible){
-            builder.append("VISIBLE");
-        } else builder.append("NOT VISIBLE!!!");
-        builder.append(" |VisualizerView is ").append(getHeight()).append(" high and ").append(getWidth()).append(" wide");
-        builder.append(" |VisualizerView is placed at (").append(getX()).append(",").append(getY()).append(")");
-        View rootView = getRootView();
-        builder.append(" |Visualizer RootView is ");
-        builder.append(rootView.getClass().getName());
-        builder.append(" |RootView is ");
-            if (rootView.getVisibility() == View.VISIBLE){
-                builder.append("VISIBLE");
-            } else builder.append("NOT VISIBLE!!!");
-        builder.append(" |RootView padding is").append(rootView.getPaddingRight()).append(" | ").append(rootView.getPaddingEnd());
-        builder.append(" |RootView is ").append(rootView.getHeight()).append(" high and ").append(rootView.getWidth()).append(" wide");
-        builder.append(" |EOF|");
-        return builder.toString();
-    }
+   //public String getDebugValues(){
+   //    StringBuilder builder = new StringBuilder();
+   //    Point displaySize = new Point();
+   //    getDisplay().getSize(displaySize);
+   //    builder.append(" |Screen dimens are ").append(displaySize.y).append(" ").append(displaySize.x);
+   //    builder.append(" |VisualizerView is ");
+   //    if (getVisibility() == VISIBLE && mVisible){
+   //        builder.append("VISIBLE");
+   //    } else builder.append("NOT VISIBLE!!!");
+   //    builder.append(" |VisualizerView is ").append(getHeight()).append(" high and ").append(getWidth()).append(" wide");
+   //    builder.append(" |VisualizerView is placed at (").append(getX()).append(",").append(getY()).append(")");
+   //    View rootView = getRootView();
+   //    builder.append(" |Visualizer RootView is ");
+   //    builder.append(rootView.getClass().getName());
+   //    builder.append(" |RootView is ");
+   //        if (rootView.getVisibility() == View.VISIBLE){
+   //            builder.append("VISIBLE");
+   //        } else builder.append("NOT VISIBLE!!!");
+   //    builder.append(" |RootView padding is").append(rootView.getPaddingRight()).append(" | ").append(rootView.getPaddingEnd());
+   //    builder.append(" |RootView is ").append(rootView.getHeight()).append(" high and ").append(rootView.getWidth()).append(" wide");
+   //    builder.append(" |EOF|");
+   //    return builder.toString();
+   //}
 }
