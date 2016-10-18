@@ -24,8 +24,8 @@ import android.content.Context;
 import android.os.Bundle;
 
 public class About extends DialogFragment {
-    private static Context mContext;
-    public static void show(Activity context) {
+    private Context mContext;
+    public void show(Activity context) {
         About dialog = new About();
         mContext = context;
         dialog.show(context.getFragmentManager(), "[ABOUT_DIALOG]");

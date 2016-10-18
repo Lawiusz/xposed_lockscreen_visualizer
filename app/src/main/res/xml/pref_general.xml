@@ -21,6 +21,11 @@
         android:title="@string/hide_app"
         android:summary="@string/app_visible"/>
     <Preference
+        android:key="restartsysui"
+        android:title="Restart SystemUI"
+        android:summary="Apply changes immediately"/>
+
+    <Preference
         android:key="xposed_working"
         android:title="@string/xposed_status"/>
     <Preference

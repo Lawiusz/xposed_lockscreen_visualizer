@@ -23,7 +23,7 @@ import java.util.List;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 
-public class KeyguardStateMonitor {
+class KeyguardStateMonitor {
     private static final String CLASS_KG_MONITOR = "com.android.systemui.statusbar.policy.KeyguardMonitor";
     private boolean mIsShowing;
     private boolean mIsSecured;
@@ -55,7 +55,7 @@ public class KeyguardStateMonitor {
         }
     }
 
-    public static KeyguardStateMonitor getInstance(ClassLoader loader){
+    static KeyguardStateMonitor getInstance(ClassLoader loader){
         if (mInstance == null){
             mInstance = new KeyguardStateMonitor(loader);
         }
@@ -70,7 +70,7 @@ public class KeyguardStateMonitor {
         }
     }
 
-    public void registerListener(Listener l) {
+    void registerListener(Listener l) {
         if (l == null) return;
         synchronized (mListeners) {
             if (!mListeners.contains(l)) {
@@ -79,7 +79,7 @@ public class KeyguardStateMonitor {
         }
     }
 
-    public void unregisterListener(Listener l) {
+    void unregisterListener(Listener l) {
         if (l == null) return;
         synchronized (mListeners) {
             if (mListeners.contains(l)) {
@@ -88,11 +88,11 @@ public class KeyguardStateMonitor {
         }
     }
 
-    public boolean isShowing() {
+    boolean isShowing() {
         return mIsShowing;
     }
 
-    public interface Listener {
+    interface Listener {
         void onKeyguardStateChanged();
     }
 }

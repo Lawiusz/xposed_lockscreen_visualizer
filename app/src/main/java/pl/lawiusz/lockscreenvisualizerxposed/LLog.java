@@ -22,15 +22,15 @@ import de.robv.android.xposed.XposedBridge;
 class LLog {
     private LLog(){}
     private static final String TAG = "LXVISUALIZER";
-    public static void d(String msg){
+    static void d(String msg){
         if (BuildConfig.DEBUG) {
             XposedBridge.log("D/" + TAG + ": " + msg);
         }
     }
-    public static void e(String msg) {
+    static void e(String msg) {
         XposedBridge.log("E/" + TAG + ": " + msg);
     }
-    public static void e(Throwable err){
+    static void e(Throwable err){
         XposedBridge.log("E/" + TAG +": " + err.getMessage());
         XposedBridge.log(err);
     }

@@ -26,6 +26,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.media.audiofx.Visualizer;
 import android.os.AsyncTask;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
@@ -132,12 +133,9 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
             final int j = i * 4 + 1;
             mValueAnimators[i] = new ValueAnimator();
             mValueAnimators[i].setDuration(128);
-            mValueAnimators[i].addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    mFFTPoints[j] = (float) animation.getAnimatedValue();
-                    postInvalidate();
-                }
+            mValueAnimators[i].addUpdateListener(animation -> {
+                mFFTPoints[j] = (float) animation.getAnimatedValue();
+                postInvalidate();
             });
         }
     }
@@ -258,7 +256,7 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         setColor(color);
     }
 
-    public void setColor(int color) {
+    public void setColor(@ColorInt int color) {
         if (color == Color.TRANSPARENT) {
             color = Color.WHITE;
         }

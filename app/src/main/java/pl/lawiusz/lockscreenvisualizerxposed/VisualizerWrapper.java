@@ -31,7 +31,7 @@ class VisualizerWrapper {
     private static VisualizerView visualizerView;
     private static boolean ready = false;
 
-    public static void init(Context theirContext, Context modContext, ViewGroup theirContainer){
+    static void init(Context theirContext, Context modContext, ViewGroup theirContainer){
         if (ready){
             LLog.d("VisualizerWrapper ready, no need to reinit!");
             return;
@@ -61,7 +61,7 @@ class VisualizerWrapper {
             throw new SecurityException(error.toString());
         }
     }
-    public static VisualizerView getVisualizerView(){
+    static VisualizerView getVisualizerView(){
         if (ready) {
             return visualizerView;
         } else return null;

@@ -17,7 +17,7 @@
  */
 package pl.lawiusz.lockscreenvisualizerxposed;
 
-import android.os.Build;
+import android.annotation.SuppressLint;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
@@ -25,20 +25,16 @@ import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class MainXposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit{
-    public static final String MOD_PACKAGE = "pl.lawiusz.lockscreenvisualizerxposed";
-    public static final String SYSTEMUI_PACKAGE = "com.android.systemui";
+    static final String MOD_PACKAGE = "pl.lawiusz.lockscreenvisualizerxposed";
+    static final String SYSTEMUI_PACKAGE = "com.android.systemui";
+    static XSharedPreferences xPreferences;
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam)
             throws Throwable {
 
-        if (lpparam.packageName.equals("android") &&
-                lpparam.processName.equals("android")) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                PermGrant.initLollipop(lpparam.classLoader);
-            } else {
-                PermGrant.initMarshmallow(lpparam.classLoader);
-            }
+        if (lpparam.packageName.equals("android") && lpparam.processName.equals("android")) {
+            PermGrant.init(lpparam.classLoader);
         }
 
         if (lpparam.packageName.equals(SYSTEMUI_PACKAGE)) {
@@ -50,10 +46,13 @@ public class MainXposedMod implements IXposedHookLoadPackage, IXposedHookZygoteI
 
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @SuppressLint("SetWorldReadable")
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        final String packageName = "pl.lawiusz.lockscreenvisualizerxposed";
-        final XSharedPreferences xPreferences = new XSharedPreferences(packageName);
-        xPreferences.makeWorldReadable();
+        xPreferences = new XSharedPreferences(MOD_PACKAGE);
+        if (!xPreferences.makeWorldReadable()){
+            LLog.e("initZygote(): Cannot make preferences readable!");
+        }
     }
 }

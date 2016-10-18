@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/LockscreenVisualizerXposed.iml" filepath="$PROJECT_DIR$/LockscreenVisualizerXposed.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/xposed_lockscreen_visualizer.iml" filepath="$PROJECT_DIR$/xposed_lockscreen_visualizer.iml" />
     </modules>
   </component>
 </project>

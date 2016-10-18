@@ -17,6 +17,8 @@
  */
 package pl.lawiusz.lockscreenvisualizerxposed;
 
+import android.os.Build;
+
 import java.util.List;
 import java.util.Set;
 
@@ -29,7 +31,16 @@ class PermGrant {
 
     private static final String CLASS_PACKAGE_MANAGER_SERVICE = "com.android.server.pm.PackageManagerService";
     private static final String CLASS_PACKAGE_PARSER_PACKAGE = "android.content.pm.PackageParser.Package";
-    public static void initLollipop(final ClassLoader loader) {
+
+    static void init(ClassLoader loader){
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            initLollipop(loader);
+        } else {
+            initMarshmallow(loader);
+        }
+    }
+
+    private static void initLollipop(final ClassLoader loader) {
         try {
             final Class<?> pmServiceClass = XposedHelpers.findClass(CLASS_PACKAGE_MANAGER_SERVICE, loader);
             XposedHelpers.findAndHookMethod(pmServiceClass, "grantPermissionsLPw",
@@ -81,7 +92,7 @@ class PermGrant {
         }
     }
 
-    public static void initMarshmallow(ClassLoader loader) {
+    private static void initMarshmallow(ClassLoader loader) {
         try {
             final Class<?> pmServiceClass = XposedHelpers.findClass(CLASS_PACKAGE_MANAGER_SERVICE, loader);
             XposedHelpers.findAndHookMethod(pmServiceClass, "grantPermissionsLPw",

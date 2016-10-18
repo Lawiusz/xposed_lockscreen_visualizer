@@ -33,11 +33,6 @@ import de.robv.android.xposed.XposedHelpers;
 
 class KeyguardMod {
 
-    private static final String PREF_ANTIDIMMER = "antidimmer";
-    private static final String PREF_FRONTMOVER = "vis_in_front";
-    private static final String PREF_AUTOCOLOR = "autocolor";
-    private static final String PREF_COLOR="custcolor";
-
     private static final String CLASS_PHONE_STATUSBAR =
             "com.android.systemui.statusbar.phone.PhoneStatusBar";
 
@@ -45,21 +40,16 @@ class KeyguardMod {
     private static final String FIELD_VIS_FRONT = "mKeyguardBottomArea";
 
     private static VisualizerView mVisualizerView;
-    private static Context mContext;
-    private static ViewGroup mBackdrop;
 
     //private static int timesLogged = 0;
 
-    private static boolean mmScreenOn = false;
+    private static boolean mScreenOn = false;
 
-    public static void init(final ClassLoader loader){
+    static void init(final ClassLoader loader){
         try {
-            final Class<?> phoneStatusBar = XposedHelpers.findClass(CLASS_PHONE_STATUSBAR, loader);
-
-            final String packageName = "pl.lawiusz.lockscreenvisualizerxposed";
-            final XSharedPreferences xPreferences = new XSharedPreferences(packageName);
-            xPreferences.makeWorldReadable();
-            if (xPreferences.getBoolean("placeholder", true)) {
+            Class<?> phoneStatusBar = XposedHelpers.findClass(CLASS_PHONE_STATUSBAR, loader);
+            MainXposedMod.xPreferences.reload();
+            if (MainXposedMod.xPreferences.getBoolean(SettingsActivity.PREF_PLACEHOLDER, true)) {
                 LLog.e("Failed to load XSharedPreferences!");
             }
 
@@ -72,20 +62,19 @@ class KeyguardMod {
                     Context modContext = mContext.createPackageContext(MainXposedMod.MOD_PACKAGE,
                             Context.CONTEXT_IGNORE_SECURITY);
 
-                    String lField;
-                    if (xPreferences.getBoolean(PREF_FRONTMOVER, false)){
-                        lField = FIELD_VIS_FRONT;
+                    String backdropName;
+                    if (MainXposedMod.xPreferences.getBoolean(SettingsActivity.PREF_FRONTMOVER, false)){
+                        backdropName = FIELD_VIS_FRONT;
                     } else {
-                        lField = FIELD_VIS_BEHIND;
+                        backdropName = FIELD_VIS_BEHIND;
                     }
 
                     // field mBackdrop => Visualizer goes behind keyguard ui
                     // field mKeyguardBottomArea => Visualizer goes in front of keyguard ui
-                    mBackdrop = (ViewGroup) XposedHelpers.getObjectField(
-                            param.thisObject, lField);
-
-                        if (mBackdrop != null) {
-                            VisualizerWrapper.init(mContext, modContext, mBackdrop);
+                    ViewGroup backdrop = (ViewGroup) XposedHelpers.getObjectField(param.thisObject,
+                            backdropName);
+                    if (backdrop != null) {
+                            VisualizerWrapper.init(mContext, modContext, backdrop);
                         }
                     KeyguardStateMonitor monitor = KeyguardStateMonitor.getInstance(loader);
                     mVisualizerView = VisualizerWrapper.getVisualizerView();
@@ -97,7 +86,7 @@ class KeyguardMod {
 
                 }
             });
-            hookUpdateMediaMetaData(phoneStatusBar, xPreferences);
+            hookUpdateMediaMetaData(phoneStatusBar, MainXposedMod.xPreferences);
         } catch (Throwable e){
             LLog.e(e);
         }
@@ -111,8 +100,8 @@ class KeyguardMod {
                 boolean.class, new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            mmScreenOn = (boolean) param.args[0];
-                            if (!mmScreenOn && mVisualizerView != null){
+                            mScreenOn = (boolean) param.args[0];
+                            if (!mScreenOn && mVisualizerView != null){
                                 mVisualizerView.setPlaying(false);
                             } else {
                                 XposedHelpers.callMethod(param.thisObject, "updateMediaMetaData", true);
@@ -144,16 +133,15 @@ class KeyguardMod {
                         }
                         if (backdropBitmap == null){
                             // use default wallpaper
-                            if (mContext == null){
-                                mContext = (Context) XposedHelpers.getObjectField(param.thisObject,
-                                        "mContext");
-                            }
-                            WallpaperManager wallpaperManager = WallpaperManager.getInstance(mContext);
+                            Context theirCtx = (Context) XposedHelpers.getObjectField(
+                                    param.thisObject, "mContext");
+                            WallpaperManager wallpaperManager
+                                    = WallpaperManager.getInstance(theirCtx);
                             Drawable wallpaperDrawable = wallpaperManager.getDrawable();
                             backdropBitmap = ((BitmapDrawable)wallpaperDrawable).getBitmap();
                         }
                         boolean shouldDisplayVisualizer = !mKeyguardFadingAway && backdropBitmap != null
-                                && mmScreenOn;
+                                && mScreenOn;
 
                         if (mVisualizerView != null) {
                             if (shouldDisplayVisualizer) {
@@ -162,9 +150,10 @@ class KeyguardMod {
                                         && mMediaController.getPlaybackState().getState()
                                         == PlaybackState.STATE_PLAYING;
                                 if (playing){
-                                    if (!xPreferences.getBoolean(PREF_AUTOCOLOR, true)) {
-                                        color = xPreferences.getInt(PREF_COLOR, 1234567890);
-                                        if (color != 1234567890) {
+                                    if (!xPreferences.getBoolean(SettingsActivity.PREF_AUTOCOLOR,
+                                            true)) {
+                                        color = xPreferences.getInt(SettingsActivity.PREF_COLOR, 0);
+                                        if (color != 0) {
                                             mVisualizerView.setColor(color);
                                         } else {
                                             mVisualizerView.setBitmap(backdropBitmap);
@@ -180,16 +169,26 @@ class KeyguardMod {
                                 //    timesLogged++;
                                 //}
                                 boolean antidimmerEnabled =
-                                        xPreferences.getBoolean(PREF_ANTIDIMMER, false);
+                                        xPreferences.getBoolean(SettingsActivity.PREF_ANTIDIMMER,
+                                                false);
+                                String backdropName;
+                                if (MainXposedMod.xPreferences.getBoolean(
+                                        SettingsActivity.PREF_FRONTMOVER, false)){
+                                    backdropName = FIELD_VIS_FRONT;
+                                } else {
+                                    backdropName = FIELD_VIS_BEHIND;
+                                }
+                                ViewGroup backdrop = (ViewGroup) XposedHelpers.getObjectField(
+                                        param.thisObject, backdropName);
                                 if (playing && antidimmerEnabled){
                                     mVisualizerView.setKeepScreenOn(true);
-                                    if (mBackdrop != null){
-                                        mBackdrop.setKeepScreenOn(true);
+                                    if (backdrop != null){
+                                        backdrop.setKeepScreenOn(true);
                                     }
                                 } else {
                                     mVisualizerView.setKeepScreenOn(false);
-                                    if (mBackdrop != null){
-                                        mBackdrop.setKeepScreenOn(false);
+                                    if (backdrop != null){
+                                        backdrop.setKeepScreenOn(false);
                                     }
                                 }
 

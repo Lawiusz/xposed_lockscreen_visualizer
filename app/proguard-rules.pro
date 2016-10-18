@@ -17,3 +17,4 @@
 #}
 -dontobfuscate
 -keep class pl.lawiusz.lockscreenvisualizerxposed.MainXposedMod
+-dontwarn java.lang.invoke.*

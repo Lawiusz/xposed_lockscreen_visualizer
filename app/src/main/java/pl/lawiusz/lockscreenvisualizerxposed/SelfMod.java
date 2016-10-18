@@ -21,10 +21,12 @@ import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedHelpers;
 
 class SelfMod {
-    public static void init(final ClassLoader loader){
+    static void init(final ClassLoader loader){
         try {
-            final Class<?> activityClass = XposedHelpers.findClass(MainXposedMod.MOD_PACKAGE + ".SettingsActivity", loader);
-            XposedHelpers.findAndHookMethod(activityClass, "isXposedWorking", XC_MethodReplacement.returnConstant(true));
+            final Class<?> activityClass = XposedHelpers.findClass(
+                    MainXposedMod.MOD_PACKAGE + ".SettingsActivity", loader);
+            XposedHelpers.findAndHookMethod(activityClass,
+                    "isXposedWorking", XC_MethodReplacement.returnConstant(true));
         } catch (Throwable e){
             LLog.e(e);
         }
