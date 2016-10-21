@@ -317,9 +317,8 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         checkStateChanged();
     }
 
-    @SuppressWarnings("SameParameterValue")
-    public void setXposedMode(boolean isXposed) {
-        this.areWeInsideSystemUI = isXposed;
+    public void setXposedMode() {
+        this.areWeInsideSystemUI = true;
     }
 
    //public String getDebugValues(){
