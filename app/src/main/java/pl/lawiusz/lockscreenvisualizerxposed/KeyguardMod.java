@@ -63,7 +63,8 @@ class KeyguardMod {
                             Context.CONTEXT_IGNORE_SECURITY);
 
                     String backdropName;
-                    if (MainXposedMod.xPreferences.getBoolean(SettingsActivity.PREF_FRONTMOVER, false)){
+                    if (MainXposedMod.xPreferences.getBoolean(SettingsActivity.PREF_FRONTMOVER,
+                            false)){
                         backdropName = FIELD_VIS_FRONT;
                     } else {
                         backdropName = FIELD_VIS_BEHIND;
@@ -104,7 +105,8 @@ class KeyguardMod {
                             if (!mScreenOn && mVisualizerView != null){
                                 mVisualizerView.setPlaying(false);
                             } else {
-                                XposedHelpers.callMethod(param.thisObject, "updateMediaMetaData", true);
+                                XposedHelpers.callMethod(param.thisObject, "updateMediaMetaData",
+                                        true);
                             }
                     }
         });
@@ -115,8 +117,8 @@ class KeyguardMod {
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                         Bitmap backdropBitmap = null;
                         int color;
-                        boolean mKeyguardFadingAway = XposedHelpers.getBooleanField(param.thisObject,
-                                "mKeyguardFadingAway");
+                        boolean mKeyguardFadingAway = XposedHelpers
+                                .getBooleanField(param.thisObject, "mKeyguardFadingAway");
 
                         MediaController mMediaController = (MediaController)
                                 XposedHelpers.getObjectField(param.thisObject, "mMediaController");
@@ -124,10 +126,11 @@ class KeyguardMod {
                                 XposedHelpers.getObjectField(param.thisObject, "mMediaMetadata");
 
                         if (mMediaMetadata != null) {
-                            backdropBitmap = mMediaMetadata.getBitmap(MediaMetadata.METADATA_KEY_ART);
+                            backdropBitmap = mMediaMetadata
+                                    .getBitmap(MediaMetadata.METADATA_KEY_ART);
                             if (backdropBitmap == null) {
-                                backdropBitmap =
-                                        mMediaMetadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
+                                backdropBitmap = mMediaMetadata
+                                                .getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
                                 // might still be null
                             }
                         }
@@ -140,7 +143,8 @@ class KeyguardMod {
                             Drawable wallpaperDrawable = wallpaperManager.getDrawable();
                             backdropBitmap = ((BitmapDrawable)wallpaperDrawable).getBitmap();
                         }
-                        boolean shouldDisplayVisualizer = !mKeyguardFadingAway && backdropBitmap != null
+                        boolean shouldDisplayVisualizer = !mKeyguardFadingAway
+                                && backdropBitmap != null
                                 && mScreenOn;
 
                         if (mVisualizerView != null) {
@@ -157,17 +161,14 @@ class KeyguardMod {
                                             mVisualizerView.setColor(color);
                                         } else {
                                             mVisualizerView.setBitmap(backdropBitmap);
-                                            LLog.e("No color to use with visualizer. Falling back to backdrop");
+                                            LLog.e("No color to use with visualizer." +
+                                                    " Falling back to backdrop");
                                         }
                                     } else {
                                         mVisualizerView.setBitmap(backdropBitmap);
                                     }
                                 }
                                 mVisualizerView.setPlaying(playing);
-                                //if (playing && timesLogged <=5) {
-                                //    LLog.d(mVisualizerView.getDebugValues());
-                                //    timesLogged++;
-                                //}
                                 boolean antidimmerEnabled =
                                         xPreferences.getBoolean(SettingsActivity.PREF_ANTIDIMMER,
                                                 false);

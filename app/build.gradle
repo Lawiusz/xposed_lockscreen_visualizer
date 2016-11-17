@@ -8,8 +8,8 @@ android {
         applicationId "pl.lawiusz.lockscreenvisualizerxposed"
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 11
-        versionName "1.8.2-DEBUG"
+        versionCode 12
+        versionName "1.8.2"
     }
     buildTypes {
         release {

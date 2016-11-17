@@ -28,6 +28,7 @@ import android.media.audiofx.Visualizer;
 import android.os.AsyncTask;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
 import android.view.View;
@@ -36,7 +37,7 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         KeyguardStateMonitor.Listener {
 
     private final Paint mPaint;
-    private Visualizer mVisualizer;
+    private @Nullable Visualizer mVisualizer;
     private ObjectAnimator mVisualizerColorAnimator;
 
     private final ValueAnimator[] mValueAnimators;
@@ -57,10 +58,12 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
                 float magnitude;
 
                 @Override
-                public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {}
+                public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes,
+                                                  int samplingRate) {}
 
                 @Override
-                public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
+                public void onFftDataCapture(Visualizer visualizer, byte[] fft,
+                                             int samplingRate) {
                     for (int i = 0; i < 32; i++) {
                         mValueAnimators[i].cancel();
                         rfk = fft[i * 2 + 2];
@@ -70,7 +73,8 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
 
                         mValueAnimators[i].setFloatValues(mFFTPoints[i * 4 + 1],
                                 mFFTPoints[3] - (dbValue * 16f));
-                        //mValueAnimators[i].setInterpolator(new AccelerateDecelerateInterpolator());
+                        //mValueAnimators[i]
+                        // .setInterpolator(new AccelerateDecelerateInterpolator());
                         mValueAnimators[i].start();
                     }
                 }
@@ -80,17 +84,12 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         @Override
         public void run()  {
             try {
-                llogD("Enabling visualizer!");
                 mVisualizer = new Visualizer(0);
-                llogD("Created new visualizer");
                 mVisualizer.setEnabled(false);
                 mVisualizer.setCaptureSize(66);
-                llogD("Capture size set to 66");
-                mVisualizer.setDataCaptureListener(mVisualizerListener, Visualizer.getMaxCaptureRate(),
-                        false, true);
-                llogD("DataCaptureListener set!");
+                mVisualizer.setDataCaptureListener(mVisualizerListener,
+                        Visualizer.getMaxCaptureRate(), false, true);
                 mVisualizer.setEnabled(true);
-                llogD("Visualizer enabled!!!");
             } catch (Throwable e){
                     if (areWeInsideSystemUI){
                         LLog.e(e);
@@ -103,13 +102,9 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         @Override
         public void run() {
             if (mVisualizer != null) {
-                llogD("Disabling visualizer!");
                 mVisualizer.setEnabled(false);
-                llogD("Visualizer disabled");
                 mVisualizer.release();
-                llogD("Visualizer released");
                 mVisualizer = null;
-                llogD("Properly destroyed visualizer!");
             }
         }
     };
@@ -148,14 +143,9 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
         this(context, null, 0);
     }
 
-    private void llogD(String what){
-        if (areWeInsideSystemUI){
-            LLog.d(what);
-        }
-    }
-
     private void updateViewVisibility() {
-        setVisibility(mKeyguardMonitor != null && mKeyguardMonitor.isShowing() ? View.VISIBLE : View.GONE);
+        setVisibility(mKeyguardMonitor != null && mKeyguardMonitor.isShowing()
+                ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -312,28 +302,4 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
     public void setXposedMode() {
         this.areWeInsideSystemUI = true;
     }
-
-   //public String getDebugValues(){
-   //    StringBuilder builder = new StringBuilder();
-   //    Point displaySize = new Point();
-   //    getDisplay().getSize(displaySize);
-   //    builder.append(" |Screen dimens are ").append(displaySize.y).append(" ").append(displaySize.x);
-   //    builder.append(" |VisualizerView is ");
-   //    if (getVisibility() == VISIBLE && mVisible){
-   //        builder.append("VISIBLE");
-   //    } else builder.append("NOT VISIBLE!!!");
-   //    builder.append(" |VisualizerView is ").append(getHeight()).append(" high and ").append(getWidth()).append(" wide");
-   //    builder.append(" |VisualizerView is placed at (").append(getX()).append(",").append(getY()).append(")");
-   //    View rootView = getRootView();
-   //    builder.append(" |Visualizer RootView is ");
-   //    builder.append(rootView.getClass().getName());
-   //    builder.append(" |RootView is ");
-   //        if (rootView.getVisibility() == View.VISIBLE){
-   //            builder.append("VISIBLE");
-   //        } else builder.append("NOT VISIBLE!!!");
-   //    builder.append(" |RootView padding is").append(rootView.getPaddingRight()).append(" | ").append(rootView.getPaddingEnd());
-   //    builder.append(" |RootView is ").append(rootView.getHeight()).append(" high and ").append(rootView.getWidth()).append(" wide");
-   //    builder.append(" |EOF|");
-   //    return builder.toString();
-   //}
 }

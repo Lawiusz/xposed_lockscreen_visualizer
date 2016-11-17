@@ -39,11 +39,13 @@ class VisualizerWrapper {
         if (isModAudioPermGranted(theirContext) && isRecordPermGranted(theirContext)) {
             LLog.d("All needed permissions granted!");
             LayoutInflater inflater = LayoutInflater.from(modContext);
-            ViewGroup mRootView = (ViewGroup) inflater.inflate(R.layout.visualizer_scrim, theirContainer, true);
+            ViewGroup mRootView = (ViewGroup) inflater.inflate(R.layout.visualizer_scrim,
+                    theirContainer, true);
             visualizerView = new VisualizerView(theirContext);
             visualizerView.setXposedMode();
             FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.BOTTOM);
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT,
+                    Gravity.BOTTOM);
             visualizerView.setLayoutParams(layoutParams);
             mRootView.addView(visualizerView);
             ready = true;
@@ -67,9 +69,11 @@ class VisualizerWrapper {
         } else return null;
     }
     private static boolean isModAudioPermGranted(Context theirContext){
-        return theirContext.checkPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS, Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED;
+        return theirContext.checkPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS,
+                Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED;
     }
     private static boolean isRecordPermGranted(Context theirContext){
-        return theirContext.checkPermission(Manifest.permission.RECORD_AUDIO, Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED;
+        return theirContext.checkPermission(Manifest.permission.RECORD_AUDIO,
+                Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED;
     }
 }
