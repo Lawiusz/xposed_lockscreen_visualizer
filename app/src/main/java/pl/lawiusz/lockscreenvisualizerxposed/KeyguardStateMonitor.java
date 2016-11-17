@@ -62,6 +62,7 @@ class KeyguardStateMonitor {
         return  mInstance;
     }
 
+    @SuppressWarnings("Convert2streamapi")
     private void notifyStateChanged() {
         synchronized (mListeners) {
             for (Listener l : mListeners) {

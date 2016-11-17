@@ -11,7 +11,6 @@
     <inspection_tool class="CastToConcreteClass" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
     <inspection_tool class="ClassMayBeInterface" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="ClassReferencesSubclass" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
-    <inspection_tool class="Convert2streamapi" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
     <inspection_tool class="DeclareCollectionAsInterface" enabled="false" level="WEAK WARNING" enabled_by_default="false">
       <option name="ignoreLocalVariables" value="false" />
       <option name="ignorePrivateMethodsAndFields" value="false" />
