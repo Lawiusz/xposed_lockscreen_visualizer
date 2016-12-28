@@ -2,14 +2,14 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.0"
+    buildToolsVersion "25.0.2"
 
     defaultConfig {
         applicationId "pl.lawiusz.lockscreenvisualizerxposed"
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 12
-        versionName "1.8.2"
+        versionCode 13
+        versionName "1.9.0"
     }
     buildTypes {
         release {
@@ -34,7 +34,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'me.tatarka:gradle-retrolambda:3.3.1'
+        classpath 'me.tatarka:gradle-retrolambda:3.4.0'
     }
 }
 
@@ -46,8 +46,8 @@ dependencies {
     provided 'de.robv.android.xposed:api:82'
     provided 'de.robv.android.xposed:api:82:sources'
 
-    compile 'com.android.support:appcompat-v7:25.0.1'
-    compile 'com.android.support:palette-v7:25.0.1'
+    compile 'com.android.support:appcompat-v7:25.1.0'
+    compile 'com.android.support:palette-v7:25.1.0'
     //noinspection GradleDynamicVersion
     compile 'com.pes.materialcolorpicker:library:1.0.1'
     //noinspection GradleDynamicVersion

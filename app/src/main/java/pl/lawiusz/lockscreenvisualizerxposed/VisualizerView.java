@@ -43,12 +43,12 @@ public class VisualizerView extends View implements Palette.PaletteAsyncListener
     private final ValueAnimator[] mValueAnimators;
     private final float[] mFFTPoints;
 
-    private boolean mVisible = false;
-    private boolean mPlaying = false;
-    private boolean mDisplaying = false; // the state we're animating to
+    private boolean mVisible;
+    private boolean mPlaying;
+    private boolean mDisplaying; // the state we're animating to
     private int mColor;
     private Bitmap mCurrentBitmap;
-    private boolean areWeInsideSystemUI = false;
+    private boolean areWeInsideSystemUI;
     private KeyguardStateMonitor mKeyguardMonitor;
 
     private final Visualizer.OnDataCaptureListener mVisualizerListener =

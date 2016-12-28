@@ -1,9 +1,11 @@
 /*
+    Copyright (C) 2016 Lawiusz
+
     This file is part of lockscreenvisualizerxposed.
 
     lockscreenvisualizerxposed is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     lockscreenvisualizerxposed is distributed in the hope that it will be useful,
@@ -22,6 +24,7 @@ import de.robv.android.xposed.XposedBridge;
 class LLog {
     private LLog(){}
     private static final String TAG = "LXVISUALIZER";
+    @SuppressWarnings("SameParameterValue")
     static void d(String msg){
         if (BuildConfig.DEBUG) {
             XposedBridge.log("D/" + TAG + ": " + msg);

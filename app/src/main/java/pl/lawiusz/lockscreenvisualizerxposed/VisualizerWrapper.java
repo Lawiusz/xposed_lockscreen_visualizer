@@ -1,9 +1,11 @@
 /*
+    Copyright (C) 2016 Lawiusz
+
     This file is part of lockscreenvisualizerxposed.
 
     lockscreenvisualizerxposed is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     lockscreenvisualizerxposed is distributed in the hope that it will be useful,
@@ -29,13 +31,8 @@ import android.widget.FrameLayout;
 class VisualizerWrapper {
 
     private static VisualizerView visualizerView;
-    private static boolean ready = false;
 
     static void init(Context theirContext, Context modContext, ViewGroup theirContainer){
-        if (ready){
-            LLog.d("VisualizerWrapper ready, no need to reinit!");
-            return;
-        }
         if (isModAudioPermGranted(theirContext) && isRecordPermGranted(theirContext)) {
             LLog.d("All needed permissions granted!");
             LayoutInflater inflater = LayoutInflater.from(modContext);
@@ -48,7 +45,6 @@ class VisualizerWrapper {
                     Gravity.BOTTOM);
             visualizerView.setLayoutParams(layoutParams);
             mRootView.addView(visualizerView);
-            ready = true;
         } else {
             StringBuilder error = new StringBuilder();
             error.append("The following required permissions are not granted: ");
@@ -59,14 +55,11 @@ class VisualizerWrapper {
                 error.append("RECORD_AUDIO");
             }
             error.append("!");
-            ready = false;
             throw new SecurityException(error.toString());
         }
     }
     static VisualizerView getVisualizerView(){
-        if (ready) {
-            return visualizerView;
-        } else return null;
+        return visualizerView;
     }
     private static boolean isModAudioPermGranted(Context theirContext){
         return theirContext.checkPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS,

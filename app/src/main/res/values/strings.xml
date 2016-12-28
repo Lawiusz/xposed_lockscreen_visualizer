@@ -4,7 +4,7 @@
     <string name="antidimmer">Prevent screen from dimming</string>
     <string name="antidimmer_enabled">Lock screen won\'t dim while displaying visualizer</string>
     <string name="antidimmer_disabled">Lock screen will dim in accordance with system settings</string>
-    <string name="restart_needed">You may need to restart your device in order to see changes.</string>
+    <string name="restart_needed">You may need to restart SystemUI (or reboot) in order to see changes.</string>
     <string name="about">About</string>
     <string name="about_summary">See info about this module</string>
     <string name="author">Author</string>

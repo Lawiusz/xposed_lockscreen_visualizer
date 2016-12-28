@@ -1,9 +1,11 @@
 /*
+    Copyright (C) 2016 Lawiusz
+
     This file is part of lockscreenvisualizerxposed.
 
     lockscreenvisualizerxposed is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
 
     lockscreenvisualizerxposed is distributed in the hope that it will be useful,
@@ -18,11 +20,9 @@
 package pl.lawiusz.lockscreenvisualizerxposed;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -43,8 +43,6 @@ import android.widget.Toast;
 
 import com.pes.androidmaterialcolorpickerdialog.ColorPicker;
 
-import java.io.File;
-
 import eu.chainfire.libsuperuser.Shell;
 
 public class SettingsActivity extends PreferenceActivity
@@ -54,13 +52,17 @@ public class SettingsActivity extends PreferenceActivity
 
     public static final String PREF_ANTIDIMMER = "antidimmer";
     public static final String PREF_FRONTMOVER = "vis_in_front";
-    public static final String PREF_AUTOCOLOR = "autocolor";
+    private static final String PREF_AUTOCOLOR = "autocolor";
     public static final String PREF_COLOR="custcolor";
     private static final String PREF_ABOUT = "about";
     private static final String PREF_XPOSED = "xposed_working";
-    private static final String PREFS_PUBLIC = "pl.lawiusz.lockscreenvisualizerxposed_preferences";
     private static final String PREF_HIDEAPP = "hideapp";
     public static final String PREF_PLACEHOLDER = "placeholder";
+
+    public static final String INTENT_ACTION_PREFS_CHANGED
+            = "pl.lawiusz.lockscreenvisualizerxposed.action.PREFS_CHANGED";
+    public static final String INTENT_EXTRA_PREF = "pref";
+    public static final String INTENT_EXTRA_VALUE = "value";
 
     private static VisualizerView visualizerView;
     private static SharedPreferences prefsPublic;
@@ -81,7 +83,6 @@ public class SettingsActivity extends PreferenceActivity
         if (visualizerView != null){
             visualizerView.setPlaying(false);
         }
-       makePrefsReadable(this);
     }
     @Override
     public void onResume(){
@@ -89,11 +90,13 @@ public class SettingsActivity extends PreferenceActivity
         final int color = prefsPublic.getInt(PREF_COLOR, 0);
         if (prefsPublic.getBoolean(PREF_AUTOCOLOR, true)){
             if (isPermRecordGranted(this) && isPermModAudioGranted(this)) {
-                if (visualizerView != null)setUpVisualizer();
+                if (visualizerView != null) {
+                    setUpVisualizer();
+                }
             }
         } else {
             if (isPermRecordGranted(this) && isPermModAudioGranted(this)) {
-                if (color == 1234567890){
+                if (color == 0){
                     if (visualizerView != null) setUpVisualizer();
                 } else {
                     if (visualizerView != null) setUpVisualizer(color);
@@ -146,12 +149,11 @@ public class SettingsActivity extends PreferenceActivity
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            getPreferenceManager().setSharedPreferencesMode(0x0001);
+            getPreferenceManager().setSharedPreferencesMode(0x0001); // MODE_WORLD_READABLE
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
             prefsPublic = getPreferenceManager().getSharedPreferences();
             prefsPublic.edit().putBoolean(PREF_PLACEHOLDER, false).apply();
-            makePrefsReadable(getActivity());
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!isPermRecordGranted(getActivity()) || !isPermModAudioGranted(getActivity())) {
                     requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO,
@@ -190,6 +192,13 @@ public class SettingsActivity extends PreferenceActivity
                 Log.e(TAG, "Failed to load shared preferences for module ui!");
             }
 
+            xposedStatus.setOnPreferenceClickListener((view) -> {
+                Intent i = new Intent(Intent.ACTION_MAIN);
+                i.setPackage("de.robv.android.xposed.installer");
+                startActivity(i);
+                return true;
+            });
+
             if (isXposedWorking()){
                 xposedStatus.setSummary(R.string.xposed_ok);
             } else {
@@ -197,8 +206,6 @@ public class SettingsActivity extends PreferenceActivity
             }
 
             antidimmer.setOnPreferenceChangeListener((preference, newValue) -> {
-                Toast.makeText(getActivity(), R.string.restart_needed,
-                        Toast.LENGTH_SHORT).show();
                 if ((Boolean)newValue){
                     preference.setSummary(R.string.antidimmer_enabled);
                 } else {
@@ -208,15 +215,13 @@ public class SettingsActivity extends PreferenceActivity
             });
 
             autocolor.setOnPreferenceChangeListener((preference, newValue) -> {
-                Toast.makeText(getActivity(), R.string.restart_needed,
-                        Toast.LENGTH_SHORT).show();
                 if ((Boolean) newValue) {
                     preference.setSummary(R.string.auto_color_summary);
                     if (visualizerView != null) setUpVisualizer();
                 } else {
                     preference.setSummary(R.string.color_custom);
                     final ColorPicker cp;
-                    if (color != 1234567890) {
+                    if (color != 0) {
                         cp = new ColorPicker(getActivity(),
                                 Color.red(color), Color.green(color), Color.blue(color));
                     } else {
@@ -227,11 +232,23 @@ public class SettingsActivity extends PreferenceActivity
                     okColor.setOnClickListener(v -> {
                         int color1 = cp.getColor();
                         prefsPublic.edit().putInt(PREF_COLOR, color1).apply();
+                        if (getActivity() != null) {
+                            Intent i = new Intent(INTENT_ACTION_PREFS_CHANGED);
+                            i.putExtra(INTENT_EXTRA_PREF, PREF_COLOR);
+                            i.putExtra(INTENT_EXTRA_VALUE, color1);
+                            getActivity().sendBroadcast(i);
+                        }
                         if (visualizerView != null) {
                             setUpVisualizer(color1);
                         }
                         cp.dismiss();
                     });
+                }
+                if (getActivity() != null && (Boolean) newValue) {
+                    Intent i = new Intent(INTENT_ACTION_PREFS_CHANGED);
+                    i.putExtra(INTENT_EXTRA_PREF, PREF_COLOR);
+                    i.putExtra(INTENT_EXTRA_VALUE, -1);
+                    getActivity().sendBroadcast(i);
                 }
                 return true;
             });
@@ -244,6 +261,12 @@ public class SettingsActivity extends PreferenceActivity
                     preference.setSummary(R.string.visualizer_front_desc);
                 } else {
                     preference.setSummary(R.string.visualizer_behind_desc);
+                }
+                if (getActivity() != null) {
+                    Intent i = new Intent(INTENT_ACTION_PREFS_CHANGED);
+                    i.putExtra(INTENT_EXTRA_PREF, PREF_FRONTMOVER);
+                    i.putExtra(INTENT_EXTRA_VALUE, (Boolean) newValue);
+                    getActivity().sendBroadcast(i);
                 }
                 return true;
             });
@@ -261,8 +284,6 @@ public class SettingsActivity extends PreferenceActivity
             hideApp.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    Toast.makeText(getActivity(), R.string.restart_needed,
-                            Toast.LENGTH_SHORT).show();
                     int mode = (Boolean)newValue ? PackageManager.COMPONENT_ENABLED_STATE_DISABLED
                             : PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
                     getActivity().getPackageManager().setComponentEnabledSetting(
@@ -322,18 +343,5 @@ public class SettingsActivity extends PreferenceActivity
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.M
                 || activity.checkSelfPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS)
                     == PackageManager.PERMISSION_GRANTED;
-    }
-
-    @SuppressLint("SetWorldReadable")
-    private static void makePrefsReadable(Context context){
-        File prefsDir = new File(context.getApplicationInfo().dataDir, "shared_prefs");
-        File prefsFile = new File(prefsDir, PREFS_PUBLIC + ".xml");
-        if (prefsFile.exists()) {
-            if (!prefsFile.setReadable(true, false)) {
-                Log.e(TAG, "Error accessing shared preferences!");
-            } else if (BuildConfig.DEBUG) {
-                Log.d(TAG,"Successfully chmoded prefs!");
-            }
-        } else Log.e(TAG, "No shared preferences file!");
     }
 }
