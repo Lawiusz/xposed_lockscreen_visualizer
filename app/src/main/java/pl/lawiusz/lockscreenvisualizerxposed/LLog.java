@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2016 Lawiusz
+    Copyright (C) 2016-2017 Lawiusz Fras
 
     This file is part of lockscreenvisualizerxposed.
 
@@ -30,6 +30,7 @@ class LLog {
             XposedBridge.log("D/" + TAG + ": " + msg);
         }
     }
+    @SuppressWarnings("SameParameterValue")
     static void e(String msg) {
         XposedBridge.log("E/" + TAG + ": " + msg);
     }

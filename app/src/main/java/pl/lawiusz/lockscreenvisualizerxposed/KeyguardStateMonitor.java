@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2016 Lawiusz
+    Copyright (C) 2016-2017 Lawiusz Fras
 
     This file is part of lockscreenvisualizerxposed.
 

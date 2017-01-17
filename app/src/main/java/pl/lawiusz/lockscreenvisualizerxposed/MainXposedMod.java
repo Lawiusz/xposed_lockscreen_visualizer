@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2016 Lawiusz
+    Copyright (C) 2016-2017 Lawiusz Fras
 
     This file is part of lockscreenvisualizerxposed.
 
@@ -20,14 +20,12 @@
 package pl.lawiusz.lockscreenvisualizerxposed;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.IXposedHookZygoteInit;
-import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-public class MainXposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit{
+@SuppressWarnings("WeakerAccess")
+public class MainXposedMod implements IXposedHookLoadPackage {
     static final String MOD_PACKAGE = "pl.lawiusz.lockscreenvisualizerxposed";
     static final String SYSTEMUI_PACKAGE = "com.android.systemui";
-    static XSharedPreferences xPreferences;
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam)
@@ -43,13 +41,6 @@ public class MainXposedMod implements IXposedHookLoadPackage, IXposedHookZygoteI
         if (lpparam.packageName.equals(MOD_PACKAGE)){
             SelfMod.init(lpparam.classLoader);
         }
-
-    }
-
-    @Override
-    public void initZygote(StartupParam startupParam) throws Throwable {
-        xPreferences = new XSharedPreferences(MOD_PACKAGE);
-        xPreferences.makeWorldReadable();
 
     }
 }

@@ -50,8 +50,6 @@ dependencies {
     compile 'com.android.support:palette-v7:25.1.0'
     //noinspection GradleDynamicVersion
     compile 'com.pes.materialcolorpicker:library:1.0.1'
-    //noinspection GradleDynamicVersion
-    compile 'eu.chainfire:libsuperuser:1.0.0.+'
 }
 apply plugin: 'me.tatarka.retrolambda'
 

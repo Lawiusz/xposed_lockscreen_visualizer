@@ -5,6 +5,14 @@
         android:key="antidimmer"
         android:summary="@string/antidimmer_disabled"
         android:title="@string/antidimmer"/>
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="antidimmer_on_batt"
+        android:summary="@string/antidimmer_batt_disabled"
+        android:enabled="false"
+        android:title="@string/antidimmer_batt"/>
+
     <SwitchPreference
         android:defaultValue="true"
         android:key="autocolor"

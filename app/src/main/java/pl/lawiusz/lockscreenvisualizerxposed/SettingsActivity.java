@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2016 Lawiusz
+    Copyright (C) 2016-2017 Lawiusz Fras
 
     This file is part of lockscreenvisualizerxposed.
 
@@ -23,10 +23,10 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -36,37 +36,49 @@ import android.preference.PreferenceFragment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.pes.androidmaterialcolorpickerdialog.ColorPicker;
 
-import eu.chainfire.libsuperuser.Shell;
-
 public class SettingsActivity extends PreferenceActivity
         implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    private static final String TAG = "LXVISUALIZER_UI";
-
     public static final String PREF_ANTIDIMMER = "antidimmer";
+    public static final String PREF_ANTIDIMMER_ON_BATT = "antidimmer_on_batt";
     public static final String PREF_FRONTMOVER = "vis_in_front";
-    private static final String PREF_AUTOCOLOR = "autocolor";
     public static final String PREF_COLOR="custcolor";
+
+    private static final String PREF_AUTOCOLOR = "autocolor";
     private static final String PREF_ABOUT = "about";
     private static final String PREF_XPOSED = "xposed_working";
     private static final String PREF_HIDEAPP = "hideapp";
-    public static final String PREF_PLACEHOLDER = "placeholder";
 
     public static final String INTENT_ACTION_PREFS_CHANGED
-            = "pl.lawiusz.lockscreenvisualizerxposed.action.PREFS_CHANGED";
-    public static final String INTENT_EXTRA_PREF = "pref";
-    public static final String INTENT_EXTRA_VALUE = "value";
+            = "pl.lawiusz.lockscreenvisualizerxposed.action.PREFS_CHANGED2";
+    public static final String INTENT_ACTION_SUICIDE
+            = "pl.lawiusz.lockscreenvisualizerxposed.action.SUICIDE";
 
     private static VisualizerView visualizerView;
-    private static SharedPreferences prefsPublic;
+    private static SharedPreferences prefs;
     private static int color;
+
+    private final SharedPreferences.OnSharedPreferenceChangeListener listener
+            = new SharedPreferences.OnSharedPreferenceChangeListener() {
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            Intent i = new Intent(INTENT_ACTION_PREFS_CHANGED);
+            i.setPackage(MainXposedMod.SYSTEMUI_PACKAGE);
+            i
+                    .putExtra(PREF_ANTIDIMMER, prefs.getBoolean(PREF_ANTIDIMMER, false))
+                    .putExtra(PREF_ANTIDIMMER_ON_BATT,
+                            prefs.getBoolean(PREF_ANTIDIMMER_ON_BATT, false))
+                    .putExtra(PREF_FRONTMOVER, prefs.getBoolean(PREF_FRONTMOVER, false))
+                    .putExtra(PREF_COLOR, prefs.getInt(PREF_COLOR, -1));
+            sendBroadcast(i);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,8 +99,8 @@ public class SettingsActivity extends PreferenceActivity
     @Override
     public void onResume(){
         super.onResume();
-        final int color = prefsPublic.getInt(PREF_COLOR, 0);
-        if (prefsPublic.getBoolean(PREF_AUTOCOLOR, true)){
+        final int color = prefs.getInt(PREF_COLOR, 0);
+        if (prefs.getBoolean(PREF_AUTOCOLOR, true)){
             if (isPermRecordGranted(this) && isPermModAudioGranted(this)) {
                 if (visualizerView != null) {
                     setUpVisualizer();
@@ -110,8 +122,7 @@ public class SettingsActivity extends PreferenceActivity
 
     @Override
     public boolean onIsMultiPane() {
-        return (getResources().getConfiguration().screenLayout
-                & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
+        return false;
     }
 
     @Override
@@ -143,17 +154,17 @@ public class SettingsActivity extends PreferenceActivity
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class GeneralPreferenceFragment extends PreferenceFragment {
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            getPreferenceManager().setSharedPreferencesMode(0x0001); // MODE_WORLD_READABLE
+            SettingsActivity activity = (SettingsActivity) getActivity();
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
-            prefsPublic = getPreferenceManager().getSharedPreferences();
-            prefsPublic.edit().putBoolean(PREF_PLACEHOLDER, false).apply();
+            prefs = getPreferenceManager().getSharedPreferences();
+            prefs.registerOnSharedPreferenceChangeListener(activity.listener);
+            activity.listener.onSharedPreferenceChanged(prefs, null);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!isPermRecordGranted(getActivity()) || !isPermModAudioGranted(getActivity())) {
                     requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO,
@@ -161,40 +172,49 @@ public class SettingsActivity extends PreferenceActivity
                 }
             }
 
-            final Preference antidimmer = findPreference(PREF_ANTIDIMMER);
-            final Preference autocolor = findPreference(PREF_AUTOCOLOR);
-            final Preference frontMover = findPreference(PREF_FRONTMOVER);
-            final Preference hideApp = findPreference(PREF_HIDEAPP);
-            final Preference about = findPreference(PREF_ABOUT);
-            final Preference xposedStatus = findPreference(PREF_XPOSED);
+            Preference antidimmer = findPreference(PREF_ANTIDIMMER);
+            Preference antidimmerBatt = findPreference(PREF_ANTIDIMMER_ON_BATT);
+            Preference autocolor = findPreference(PREF_AUTOCOLOR);
+            Preference frontMover = findPreference(PREF_FRONTMOVER);
+            Preference hideApp = findPreference(PREF_HIDEAPP);
+            Preference about = findPreference(PREF_ABOUT);
+            Preference xposedStatus = findPreference(PREF_XPOSED);
+
+
             color = 0;
-            if (prefsPublic != null) {
-                color = prefsPublic.getInt(PREF_COLOR, 0);
-                if (prefsPublic.getBoolean(PREF_AUTOCOLOR, true)) {
-                    autocolor.setSummary(R.string.auto_color_summary);
+            color = prefs.getInt(PREF_COLOR, 0);
+            if (prefs.getBoolean(PREF_AUTOCOLOR, true)) {
+                autocolor.setSummary(R.string.auto_color_summary);
 
-                } else {
-                    autocolor.setSummary(R.string.color_custom);
-                }
+            } else {
+                autocolor.setSummary(R.string.color_custom);
+            }
 
-                if (prefsPublic.getBoolean(PREF_ANTIDIMMER, false)) {
-                    antidimmer.setSummary(R.string.antidimmer_enabled);
-                } else {
-                    antidimmer.setSummary(R.string.antidimmer_disabled);
-                }
+            if (prefs.getBoolean(PREF_ANTIDIMMER, false)) {
+                antidimmer.setSummary(R.string.antidimmer_enabled);
+                antidimmerBatt.setEnabled(true);
+            } else {
+                antidimmer.setSummary(R.string.antidimmer_disabled);
+                antidimmerBatt.setEnabled(false);
+            }
 
-                if (prefsPublic.getBoolean(PREF_FRONTMOVER, false)) {
-                    frontMover.setSummary(R.string.visualizer_front_desc);
-                } else {
-                    frontMover.setSummary(R.string.visualizer_behind_desc);
-                }
-            } else{
-                Log.e(TAG, "Failed to load shared preferences for module ui!");
+            if (prefs.getBoolean(PREF_ANTIDIMMER_ON_BATT, false)){
+                antidimmerBatt.setSummary(R.string.antidimmer_batt_enabled);
+            } else {
+                antidimmerBatt.setSummary(R.string.antidimmer_batt_disabled);
+            }
+
+            if (prefs.getBoolean(PREF_FRONTMOVER, false)) {
+                frontMover.setSummary(R.string.visualizer_front_desc);
+            } else {
+                frontMover.setSummary(R.string.visualizer_behind_desc);
             }
 
             xposedStatus.setOnPreferenceClickListener((view) -> {
                 Intent i = new Intent(Intent.ACTION_MAIN);
                 i.setPackage("de.robv.android.xposed.installer");
+                i.putExtra("section", "modules");
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(i);
                 return true;
             });
@@ -208,8 +228,10 @@ public class SettingsActivity extends PreferenceActivity
             antidimmer.setOnPreferenceChangeListener((preference, newValue) -> {
                 if ((Boolean)newValue){
                     preference.setSummary(R.string.antidimmer_enabled);
+                    antidimmerBatt.setEnabled(true);
                 } else {
                     preference.setSummary(R.string.antidimmer_disabled);
+                    antidimmerBatt.setEnabled(false);
                 }
                 return true;
             });
@@ -231,24 +253,12 @@ public class SettingsActivity extends PreferenceActivity
                     Button okColor = (Button) cp.findViewById(R.id.okColorButton);
                     okColor.setOnClickListener(v -> {
                         int color1 = cp.getColor();
-                        prefsPublic.edit().putInt(PREF_COLOR, color1).apply();
-                        if (getActivity() != null) {
-                            Intent i = new Intent(INTENT_ACTION_PREFS_CHANGED);
-                            i.putExtra(INTENT_EXTRA_PREF, PREF_COLOR);
-                            i.putExtra(INTENT_EXTRA_VALUE, color1);
-                            getActivity().sendBroadcast(i);
-                        }
+                        prefs.edit().putInt(PREF_COLOR, color1).apply();
                         if (visualizerView != null) {
                             setUpVisualizer(color1);
                         }
                         cp.dismiss();
                     });
-                }
-                if (getActivity() != null && (Boolean) newValue) {
-                    Intent i = new Intent(INTENT_ACTION_PREFS_CHANGED);
-                    i.putExtra(INTENT_EXTRA_PREF, PREF_COLOR);
-                    i.putExtra(INTENT_EXTRA_VALUE, -1);
-                    getActivity().sendBroadcast(i);
                 }
                 return true;
             });
@@ -262,15 +272,9 @@ public class SettingsActivity extends PreferenceActivity
                 } else {
                     preference.setSummary(R.string.visualizer_behind_desc);
                 }
-                if (getActivity() != null) {
-                    Intent i = new Intent(INTENT_ACTION_PREFS_CHANGED);
-                    i.putExtra(INTENT_EXTRA_PREF, PREF_FRONTMOVER);
-                    i.putExtra(INTENT_EXTRA_VALUE, (Boolean) newValue);
-                    getActivity().sendBroadcast(i);
-                }
                 return true;
             });
-            boolean apphidden = prefsPublic.getBoolean(PREF_HIDEAPP, false);
+            boolean apphidden = prefs.getBoolean(PREF_HIDEAPP, false);
             String apphideSummary = apphidden ? getString(R.string.app_invisible)
                     : getString(R.string.app_visible);
             hideApp.setSummary(apphideSummary);
@@ -305,12 +309,15 @@ public class SettingsActivity extends PreferenceActivity
             String version = BuildConfig.VERSION_NAME;
             about.setSummary(about.getSummary() + " v." + version);
             findPreference("restartsysui").setOnPreferenceClickListener(preference -> {
-                new Thread(() -> {
-                    Shell.SU.run("killall com.android.systemui");
-                }).start();
+                Context context = getActivity();
+                if (context == null) return false;
+                Intent i = new Intent(INTENT_ACTION_SUICIDE);
+                i.setPackage(MainXposedMod.SYSTEMUI_PACKAGE);
+                context.sendBroadcast(i);
                 return false;
             });
         }
+
 
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
@@ -321,7 +328,7 @@ public class SettingsActivity extends PreferenceActivity
             }
             return super.onOptionsItemSelected(item);
         }
-    }
+    } // end of fragment
 
     private static void setUpVisualizer(){
         setUpVisualizer(ContextCompat.getColor(visualizerView.getContext(), R.color.colorPrimary));

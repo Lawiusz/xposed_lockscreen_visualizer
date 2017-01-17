@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2016 Lawiusz
+    Copyright (C) 2016-2017 Lawiusz Fras
 
     This file is part of lockscreenvisualizerxposed.
 
@@ -27,10 +27,10 @@ import android.os.Bundle;
 
 public class About extends DialogFragment {
     private Context mContext;
+
     public void show(Activity context) {
-        About dialog = new About();
         mContext = context;
-        dialog.show(context.getFragmentManager(), "[ABOUT_DIALOG]");
+        show(context.getFragmentManager(), "[ABOUT_DIALOG]");
     }
 
     @Override

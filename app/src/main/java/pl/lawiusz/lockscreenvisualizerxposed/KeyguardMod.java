@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2016 Lawiusz
+    Copyright (C) 2016-2017 Lawiusz Fras
 
     This file is part of lockscreenvisualizerxposed.
 
@@ -24,6 +24,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -40,93 +41,89 @@ class KeyguardMod {
 
     private static final String CLASS_PHONE_STATUSBAR =
             "com.android.systemui.statusbar.phone.PhoneStatusBar";
-
     private static final String FIELD_VIS_BEHIND ="mBackdrop";
     private static final String FIELD_VIS_FRONT = "mKeyguardBottomArea";
 
     private static VisualizerView mVisualizerView;
-
     //private static int timesLogged = 0;
-
     private static boolean mScreenOn;
+    private static boolean registeredReceiver;
     private static Bitmap currentBitmap;
+    private static SharedPreferences prefs;
 
-
-    private static boolean moveVisToFront;
     private static boolean keepScreenOn;
+    private static boolean keepScreenOnBatt;
+    private static boolean moveVisToFront;
     private static int visCustomColor = -1;
-
-    private static final IntentFilter filter
-            = new IntentFilter(SettingsActivity.INTENT_ACTION_PREFS_CHANGED);
 
     private static final BroadcastReceiver settingsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (SettingsActivity.INTENT_ACTION_PREFS_CHANGED.equals(intent.getAction())){
-                switch (intent.getStringExtra(SettingsActivity.INTENT_EXTRA_PREF)) {
-                    case SettingsActivity.PREF_FRONTMOVER:
-                        moveVisToFront = intent
-                                .getBooleanExtra(SettingsActivity.INTENT_EXTRA_VALUE, false);
-                        break;
-                    case SettingsActivity.PREF_ANTIDIMMER:
-                        keepScreenOn = intent
-                                .getBooleanExtra(SettingsActivity.INTENT_EXTRA_VALUE, false);
-                        break;
-                    case SettingsActivity.PREF_COLOR:
-                        visCustomColor = intent
-                                .getIntExtra(SettingsActivity.INTENT_EXTRA_VALUE, -1);
-                        break;
-                    default: break;
+                keepScreenOn = intent.getBooleanExtra(SettingsActivity.PREF_ANTIDIMMER, false);
+                keepScreenOnBatt = intent
+                        .getBooleanExtra(SettingsActivity.PREF_ANTIDIMMER_ON_BATT, false);
+                moveVisToFront = intent.getBooleanExtra(SettingsActivity.PREF_FRONTMOVER, false);
+                visCustomColor = intent.getIntExtra(SettingsActivity.PREF_COLOR, -1);
+                if (prefs == null){
+                    prefs = context.getSharedPreferences(MainXposedMod.MOD_PACKAGE, 0);
                 }
+                prefs.edit()
+                        .putBoolean(SettingsActivity.PREF_ANTIDIMMER, keepScreenOn)
+                        .putBoolean(SettingsActivity.PREF_ANTIDIMMER_ON_BATT, keepScreenOnBatt)
+                        .putBoolean(SettingsActivity.PREF_FRONTMOVER, moveVisToFront)
+                        .putInt(SettingsActivity.PREF_COLOR, visCustomColor)
+                        .apply();
+
                 if (mVisualizerView != null){
-                    mVisualizerView.setKeepScreenOn(keepScreenOn && isDevicePluggedIn(context));
+                    mVisualizerView.setKeepScreenOn(keepScreenOn && (keepScreenOnBatt
+                            || isDevicePluggedIn(context)));
                     if (visCustomColor != -1){
                         mVisualizerView.setColor(visCustomColor);
                     } else if (currentBitmap != null) {
                         mVisualizerView.setBitmap(currentBitmap);
                     }
-
                 }
+            } else if (SettingsActivity.INTENT_ACTION_SUICIDE.equals(intent.getAction())){
+                try {
+                    // ensure that SharedPreferences are saved to disk
+                    Class.forName("android.app.QueuedWork")
+                            .getDeclaredMethod("waitToFinish")
+                            .invoke(null);
+                } catch (ReflectiveOperationException e) {
+                    LLog.e(e);
+                }
+                System.exit(0);
             }
         }
     };
-    private static boolean registeredReceiver;
 
     static void init(final ClassLoader loader){
         try {
             Class<?> phoneStatusBar = XposedHelpers.findClass(CLASS_PHONE_STATUSBAR, loader);
-            if (MainXposedMod.xPreferences.getBoolean(SettingsActivity.PREF_PLACEHOLDER, true)) {
-                LLog.e("Failed to load XSharedPreferences!");
-            } else {
-                moveVisToFront = MainXposedMod.xPreferences
-                        .getBoolean(SettingsActivity.PREF_FRONTMOVER, false);
-                keepScreenOn = MainXposedMod.xPreferences
-                        .getBoolean(SettingsActivity.PREF_ANTIDIMMER, false);
-                visCustomColor = MainXposedMod.xPreferences.getInt(SettingsActivity.PREF_COLOR, -1);
-            }
-
             XposedHelpers.findAndHookMethod(phoneStatusBar, "makeStatusBarView",
                     new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(final MethodHookParam param) throws Throwable {
-                    Context mContext = (Context) XposedHelpers.getObjectField(param.thisObject,
-                            "mContext");
-                    Context modContext = mContext.createPackageContext(MainXposedMod.MOD_PACKAGE,
-                            Context.CONTEXT_IGNORE_SECURITY);
+                    Context systemContext = (Context) XposedHelpers
+                            .getObjectField(param.thisObject, "mContext");
+                    Context modContext = systemContext.createPackageContext(
+                            MainXposedMod.MOD_PACKAGE, Context.CONTEXT_IGNORE_SECURITY);
 
-                    String backdropName;
-                    if (moveVisToFront){
-                        backdropName = FIELD_VIS_FRONT;
-                    } else {
-                        backdropName = FIELD_VIS_BEHIND;
-                    }
+                    prefs = systemContext.getSharedPreferences(MainXposedMod.MOD_PACKAGE, 0);
+                    keepScreenOn = prefs.getBoolean(SettingsActivity.PREF_ANTIDIMMER, false);
+                    keepScreenOnBatt = prefs.
+                            getBoolean(SettingsActivity.PREF_ANTIDIMMER_ON_BATT, false);
+                    moveVisToFront = prefs.getBoolean(SettingsActivity.PREF_FRONTMOVER, false);
+                    visCustomColor = prefs.getInt(SettingsActivity.PREF_COLOR, -1);
 
+                    String backdropName = moveVisToFront ? FIELD_VIS_FRONT : FIELD_VIS_BEHIND;
                     // field mBackdrop => Visualizer goes behind keyguard ui
                     // field mKeyguardBottomArea => Visualizer goes in front of keyguard ui
                     ViewGroup backdrop = (ViewGroup) XposedHelpers.getObjectField(param.thisObject,
                             backdropName);
                     if (backdrop != null) {
-                            VisualizerWrapper.init(mContext, modContext, backdrop);
+                            VisualizerWrapper.init(systemContext, modContext, backdrop);
                     }
                     KeyguardStateMonitor monitor = KeyguardStateMonitor.getInstance(loader);
                     mVisualizerView = VisualizerWrapper.getVisualizerView();
@@ -136,7 +133,10 @@ class KeyguardMod {
                         LLog.e("VisualizerView is null!");
                     }
                     if (!registeredReceiver) {
-                        mContext.registerReceiver(settingsReceiver, filter);
+                        IntentFilter filter
+                                = new IntentFilter(SettingsActivity.INTENT_ACTION_PREFS_CHANGED);
+                        filter.addAction(SettingsActivity.INTENT_ACTION_SUICIDE);
+                        systemContext.registerReceiver(settingsReceiver, filter);
                         registeredReceiver = true;
                     }
                 }
@@ -205,7 +205,8 @@ class KeyguardMod {
                                     }
                                     mVisualizerView.setPlaying(playing);
                                     if (playing && keepScreenOn
-                                            && isDevicePluggedIn(mVisualizerView.getContext())){
+                                            && (keepScreenOnBatt ||
+                                            isDevicePluggedIn(mVisualizerView.getContext()))){
                                         mVisualizerView.setKeepScreenOn(true);
                                     } else {
                                         mVisualizerView.setKeepScreenOn(false);
